@@ -1,0 +1,9 @@
+.ipynb_checkpoints/
+*.dat
+LEVELS 
+OVRLAP
+oic
+ols
+olg
+das*
+*.so
