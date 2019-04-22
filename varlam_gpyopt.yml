@@ -1,0 +1,39 @@
+#
+#   yalm input file for varlam_gpyopt v1.1
+#
+#   input dictionary:
+#     itype    -- type of algorithm
+#                    = 1 : GP
+#                    = 2 : ... 
+#     igrid    -- type of space grid
+#                    = 0 : continuous
+#                    = 1 : ...
+#     imin     -- consider ground plus/or-only excited states
+#                    = 0 : includ ground state
+#                    = 1 : only excited states
+#     ifun     -- type of loss funtional
+#                    = 0 : use loss as sum of weighted relative errros
+#                    = 1 : use loss as sum of weighted square relative errors
+#     maxevals -- maximum number of evaluations
+#     eps_up   -- superior deviation in lambda values
+#     eps_down -- inferior deviation in lambda values
+#     nlamvar  -- number of lambda values to be varied (max=20)
+#     nener    -- number of energies to be considered (ground + excited)
+#     igi      -- type of weight to be used in minimizing functional
+#                    = 0 : use weight input below
+#                    = 1 : use statistical weight gi = sum 2j+1
+#     weight   -- weight in relative errors (number of elements == neex)
+#     cfgs     -- configurations to be included in the calculation
+#
+itype: 1
+igrid: 0
+imin: 0
+ifun: 1
+maxevals: 6
+eps_up: 1.5
+eps_down: 0.9
+nlamvar: 3
+nener: 4
+igi: 1
+cfgs:
+  - 32
