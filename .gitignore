@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 *.dat
+*.out
 LEVELS 
 OVRLAP
 oic
