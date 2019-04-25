@@ -126,8 +126,8 @@ def atom_name(nzion):
     nzion=abs(nzion)
     atomname=['0','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg']
     for i in range(len(atomname)):
-         if nzion==i:
-              chatom = atomname[i]
+        if nzion==i:
+            chatom = atomname[i]
     return chatom
 def pot_type(nzion):
     if nzion < 0:
@@ -149,7 +149,7 @@ def error_relat(valexact,valcomp):
     if valexact == 0.0 or valcomp == 0.0:
         error=999
     error = abs((valexact-valcomp)/valexact)
-    return error
+    return error*100
 
 # Loss function defined as weighted sum of energies relative errors
 # def loss_wsumE(enere,enerc,neex,weight):
@@ -212,18 +212,18 @@ def init_var(NVMX,NEMX):
 def print_eresults():
     lam_best = myBopt.x_opt
     nlam0 = len(lam_best)
-    autovarlambda.run_as(lam_best.reshape(-1,3),nlam0)
+    autovarlambda.run_as(lam_best.reshape(-1,nlam0),nlam0)
     neex = autovarlambda.exactbck.ne
     enere = autovarlambda.eneroutbck.enere
     enerc = autovarlambda.eneroutbck.enerc
     loss_best = loss_wsumE(enere,enerc,neex,weight)
-    #print("x*= {} f(x*)= {}".format(myBopt.x_opt,myBopt.fx_opt))
+#    print("x*= {} f(x*)= {}".format(lam_best,loss_best))
     erroregr = error_relat(enere[0],enerc[0])
-    print("\n===>>> print results in "+filename+".out <<<===")
+    print("\n===>>> print results in .out <<<===")
     print("\n Number of evaluations = {:10d}".format(maxevals),file=fener)
     print("                  Time = {:10.3f} minutes".format(total),file=fener)
     print("-"*80,file=fener)
-    print(" Best TPE results:",file=fener)
+    print(" Best results:",file=fener)
     print("-"*80,file=fener)
     print("\n  lambda = {} ".format(lam_best),file=fener)
     print("\n  Ground State Energy  = {:12.6f}".format(enerc[0]),
@@ -287,12 +287,12 @@ for i in range(ntcfg):
                                                  model_type = 'GP',
                                                  acquisition_type='EI',  
                                                  normalize_Y = True,
-                                                 acquisition_weight = 20)
+                                                 acquisition_weight = 2)
 # runs the optimization for the three methods
     myBopt.run_optimization(maxevals,verbosity=False)
     myBopt.save_evaluations(filename+".dat")
-    myBopt.save_models("model_"+filename+".dat")
-    myBopt.save_report("report_"+filename+".dat")
+    myBopt.save_models(filename+".mod")
+    myBopt.save_report(filename+".rep")
     t1 = time.time()
     total = (t1-t0)/60.
 
@@ -308,4 +308,4 @@ for i in range(ntcfg):
            line = fp.readline()
     print('')
 
-os.system("rm CONFIG.DAT TERMS olg ols tmp das")
+os.system("rm CONFIG.DAT LEVELS TERMS olg oic ols tmp das")

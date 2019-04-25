@@ -29,9 +29,9 @@ itype: 1
 igrid: 0
 imin: 0
 ifun: 1
-maxevals: 20000
-eps_up: 1.5
-eps_down: 0.9
+maxevals: 1000
+eps_up: 1.0
+eps_down: 0.8
 nlamvar: 20
 nener: 19
 igi: 1
