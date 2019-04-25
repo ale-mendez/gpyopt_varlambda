@@ -1,9 +1,14 @@
 .ipynb_checkpoints/
 *.dat
+*.mod
+*.rep
 *.out
 LEVELS 
 OVRLAP
 LEVELS
+CONFIG*
+TERMS
+tmp
 oic
 ols
 olg
