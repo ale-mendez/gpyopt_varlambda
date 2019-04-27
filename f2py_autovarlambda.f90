@@ -421,3 +421,30 @@ cf2py real*8, intent(in) :: lam0(NVMX)
 
       return
       end
+
+!***********************************************************************
+      subroutine print_ener()
+!***********************************************************************
+      implicit none
+      integer LMX
+      parameter (LMX=300)
+
+      integer i
+      real*8 errp,diff
+      real*8 enere,enerc
+      integer neex,ncex
+
+      common/eneroutbck/enere(LMX),enerc(LMX),neex,ncex
+
+      open(unit=15,file='error.dat',status="unknown")
+      do 100 i=1,neex
+         if(enere(i).eq.0) goto 100
+         diff = enere(i)-enerc(i)
+         errp = dabs(diff/enere(i))*100.d0
+         write(15,1000) i,errp,enere(i),enerc(i)
+100   continue
+
+1000  format(i4,3(f12.6,2x))
+      close(unit=15)
+      return
+      end

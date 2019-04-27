@@ -73,7 +73,7 @@ igi = 1
 
 # Input parameters
 with open("varlam_gpyopt.yml", 'r') as stream:
-    data_loaded = yaml.load(stream)
+    data_loaded = yaml.full_load(stream)
 
 itype = data_loaded.get("itype")
 if itype==1:
@@ -148,8 +148,8 @@ def human_format(num):
 def error_relat(valexact,valcomp):
     if valexact == 0.0 or valcomp == 0.0:
         error=999
-    error = abs((valexact-valcomp)/valexact)
-    return error*100
+    error = abs((valexact-valcomp)/valexact)*100
+    return error
 
 # Loss function defined as weighted sum of energies relative errors
 # def loss_wsumE(enere,enerc,neex,weight):
@@ -177,12 +177,12 @@ def var_lambda(x):
     for i in range(nlam0):
         if lam0[i] < minlam:
             lam0[i] = minlam
+    lam0 = abs(lam0)
     autovarlambda.run_as(lam0,nlam0)
     neex = autovarlambda.exactbck.ne
     enere = autovarlambda.eneroutbck.enere
     enerc = autovarlambda.eneroutbck.enerc
     loss = loss_wsumE(enere,enerc,neex,weight)
-    print(lam0,loss)
     return loss
 
 # Determine file name string vector from fortran subroutine data
@@ -192,7 +192,11 @@ def def_filename():
     chatom=atom_name(nzion)
     chtype=pot_type(nzion)
     cfgs=str(ncfg)+"CFG"+chtype
-    filename=chatom+cfgs+"_GP"+human_format(maxevals)
+    if itype == 1:
+        chalgo="_GP"
+    if itype == 2:
+        sys.exit("Error: itype == 2 not implemented. stop")
+    filename=chatom+cfgs+chalgo+human_format(maxevals)
     return ncfg, filename
 
 # Open .out file
@@ -209,15 +213,13 @@ def init_var(NVMX,NEMX):
     neex = int()
     return lam0, nlam0, enere, enerc, neex
 
-def print_eresults():
-    lam_best = myBopt.x_opt
-    nlam0 = len(lam_best)
-    autovarlambda.run_as(lam_best.reshape(-1,nlam0),nlam0)
-    neex = autovarlambda.exactbck.ne
+# Print best results
+def print_eresults(lam_best,nlam0):
+    autovarlambda.run_as(lam_best,nlam0)
+    neex = autovarlambda.eneroutbck.neex
     enere = autovarlambda.eneroutbck.enere
     enerc = autovarlambda.eneroutbck.enerc
     loss_best = loss_wsumE(enere,enerc,neex,weight)
-#    print("x*= {} f(x*)= {}".format(lam_best,loss_best))
     erroregr = error_relat(enere[0],enerc[0])
     print("\n===>>> print results in .out <<<===")
     print("\n Number of evaluations = {:10d}".format(maxevals),file=fener)
@@ -252,8 +254,6 @@ for i in range(NVMX):
     if igrid==0:
         bounds.append({'name': 'lam'+alam, 'type': 'continuous', 'domain': (lv[i]-eps_down,lv[i]+eps_up)})
 
-
-
 # Begin loop in "configurations"
 for i in range(ntcfg):
     icfg = cfgs[i]
@@ -279,25 +279,36 @@ for i in range(ntcfg):
         sys.exit()
     fener = open_fout(filename,ncfg)
 
-# Creates three identical objects that we will later use to compare the optimization strategies 
+# Create the algorithm & Trials
+    if itype == 1:
+        algo = tpe.suggest
+        chalgo = "GP"
+    if itype == 2:
+        sys.exit("Error: itype == 2 not implemented. stop")
+
+# Create object with BO method
     print("===>>> RUN GPyOpt <<<===")
     t0 = time.time()
     myBopt = GPyOpt.methods.BayesianOptimization(f=var_lambda,
                                                  domain=bounds,
-                                                 model_type = 'GP',
+                                                 model_type = chalgo,
                                                  acquisition_type='EI',  
                                                  normalize_Y = True,
                                                  acquisition_weight = 2)
-# runs the optimization for the three methods
     myBopt.run_optimization(maxevals,verbosity=False)
     myBopt.save_evaluations(filename+".dat")
     myBopt.save_models(filename+".mod")
     myBopt.save_report(filename+".rep")
+    lam_best = myBopt.x_opt
+    nlam0 = len(lam_best)
+    lam_best = lam_best.reshape(-1,nlam0)
     t1 = time.time()
     total = (t1-t0)/60.
 
-# run autostructure for best lambda found
-    print_eresults()
+# PRINT BEST RESULTS
+    print_eresults(lam_best,nlam0)
+    autovarlambda.print_ener()
+    os.system("mv error.dat "+filename+"_erp.dat")
 
 # cat .out file
     with open(filename+".out","r") as fp:
@@ -308,4 +319,5 @@ for i in range(ntcfg):
            line = fp.readline()
     print('')
 
-os.system("rm CONFIG.DAT LEVELS TERMS olg oic ols tmp das")
+os.system("rm CONFIG.DAT TERMS LEVELS olg ols oic das")
+os.system("mv tmp das_"+ str(icfg) + "CFG_"+human_format(maxevals)+"best")
