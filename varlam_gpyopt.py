@@ -80,112 +80,80 @@ igi=1
 with open("varlam_gpyopt.yml", 'r') as stream:
     data_loaded=yaml.full_load(stream)
 
-try:
-    cfgs=data_loaded.get("cfgs")
-except:
-    raise ValueError("Error: cfgs not defined.")
+cfgs=data_loaded.get("cfgs")
+if cfgs is None: raise ValueError("Error: cfgs not defined.")
 
-try:
-    maxevals=data_loaded.get("maxevals")
-except:
-    raise ValueError("Error: maxevals not defined.")
+maxevals=data_loaded.get("maxevals")
+if maxevals is None: raise ValueError("Error: maxevals not defined.")
 
-try:
-    mtype=data_loaded.get("mtype")
-    if mtype=="GP":
-        print(" ==> model type: "+mtype)
-    else:
-        raise ValueError("Error: "+mtype+" not implemented.")
-except:
-    print("Warning: model type not defined. Use default: GP ")
+mtype=data_loaded.get("mtype")
+if mtype=="GP": print(" ==> model type: "+mtype)
+elif mtype is None: print("Warning: model type not defined. Use default: GP ")
+else: raise ValueError("Error: "+mtype+" not implemented.")
 
-try:
-    aftype=data_loaded.get("aftype")
-    if aftype=="EI" or aftype=="MPI" or aftype=="GP-UCB":
-        print(" ==> acquisition function type: "+aftype)
-    else:
-        raise ValueError("Error: "+mtype+" not implemented.")
-except:
-    print("Warning: acquisition function type not defined. Use default: EI ")
+aftype=data_loaded.get("aftype")
+if aftype=="EI" or aftype=="MPI" or aftype=="GP-UCB": print(" ==> acquisition function type: "+aftype)
+elif aftype is None: print("Warning: acquisition function type not defined. Use default: EI ")
+else: raise ValueError("Error: "+mtype+" not implemented.")
 
-try:
-    afweight=data_loaded.get("afweight")
-    print(" ==> acquisition function weight: "+afweight)
-except:
-    print("Warning: acquisition function weight not defined. Use default: 1. ")
+afweight=data_loaded.get("afweight")
+if afweight: print(" ==> acquisition function weight: "+str(afweight))
+elif afweight is None: print("Warning: acquisition function weight not defined. Use default: 1.")
 
-try:
-    gridtype=data_loaded.get("gridtype")
-    if gridtype=="continuous":
-        igrid=0
-        print(" ==> grid type: "+gridtype)
-    else:
-        raise ValueError("Error: "+gridtype+" not implemented.")
-except:
-    print("Warning: grid type not defined. Use default: continuous")
+gridtype=data_loaded.get("gridtype")
+if gridtype=="continuous":
+    igrid=0
+    print(" ==> grid type: "+gridtype)
+elif gridtype is None: print("Warning: grid type not defined. Use default: continuous")
+else: raise ValueError("Error: "+gridtype+" not implemented.")
 
-try:
-    nlamvar=data_loaded.get("nlamvar")
-except:
-    raise ValueError("Error: nlamvar not defined.")
+nlamvar=data_loaded.get("nlamvar")
+if nlamvar is None: raise ValueError("Error: nlamvar not defined.")
 
-try:
-    maxlam=data_loaded.get("maxlam")
-    minlam=data_loaded.get("minlam")
-except:
-    raise ValueError("Error: maxlam and/or minlam not defined.")
+maxlam=data_loaded.get("maxlam")
+minlam=data_loaded.get("minlam")
+if maxlam is None or minlam is None: raise ValueError("Error: maxlam and/or minlam not defined.")
 
-try:
-    mfunc=data_loaded.get("mfunc")
-    if mfunc=="Er":
-        ifun=0
-        print(" ==> minimization function: sum of weigthed relative errors")
-    elif mfunc=="Er**2":
-        ifun=1
-        print(" ==> minimization function: sum of weigthed square relative errors")
-    else:
-        raise ValueError("Error: "+mfunc+" not implemented.")
-except:
-    print("Warning: minimization function not defined. Use default: Er ")
+mfunc=data_loaded.get("mfunc")
+if mfunc=="Er":
+    ifun=0
+    print(" ==> minimization function: sum of weigthed relative errors")
+elif mfunc=="Er**2":
+    ifun=1
+    print(" ==> minimization function: sum of weigthed square relative errors")
+elif mfunc is None: print("Warning: minimization function not defined. Use default: Er ")
+else: raise ValueError("Error: "+mfunc+" not implemented.")
 
-try:
-    minst=data_loaded.get("minst")
-    if minst=="gr+ex":
-        imin=0
-        print(" ==> states included in minimization function: ground + excited")
-    elif minst=="ex":
-        imin=1
-        print(" ==> states included in minimization function: excited")
-    else:
-        raise ValueError("Error: "+minst+" not implemented.")
-except:
-    print("Warning: states to be included in minimization not defined. Use default: ground + excited")
+minst=data_loaded.get("minst")
+if minst=="gr+ex":
+    imin=0
+    print(" ==> states included in minimization function: ground + excited")
+elif minst=="ex":
+    imin=1
+    print(" ==> states included in minimization function: excited")
+elif minst is None: print("Warning: states to be minimized not defined. Use default: ground + excited")
+else: raise ValueError("Error: "+minst+" not implemented.")
 
-try:
-    nener=data_loaded.get("nener")
-    NEMX=nener
-except:
-    raise ValueError("Error: nener not defined.")
+nener=data_loaded.get("nener")
+NEMX=nener
+if nener is None: raise ValueError("Error: nener not defined.")
 
-try:
-    wi=data_loaded.get("wi")
-    if wi=="eq" o wi=="gi":
-        weight=np.full(nener,1.)
-        print(" ==> weight type: "+wi)
-    elif wi=="inp":
-        try:
-            inpweight=data_loaded.get("weight")
-            linpw=len(inpweight)
-            if linpw<nener: # fill the missing wi with the last input value
-                for i in range(linpw,nener):
-                    inpweight.append(inpweight[linpw-1])
-            weight=np.array(listweight)
-        except:
-            raise ValueError("Error: weight not defined.")
-except:
-    raise ValueError("Error: wi not defined.")
-
-sys.exit()
+wi=data_loaded.get("wi")
+if wi=="eq" or wi=="gi":
+    if wi=="gi": igi=1
+    if wi=="eq": igi=0
+    weight=np.full(nener,1.)
+    print(" ==> weight type: "+wi)
+elif wi=="inp":
+    inpweight=data_loaded.get("weight")
+    linpw=len(inpweight)
+    if linpw<nener: # fill the missing wi with the last input value
+        for i in range(linpw,nener):
+            inpweight.append(inpweight[linpw-1])
+    weight=np.array(listweight)
+    if inpweight is None or linpw==0:
+        raise ValueError("Error: weight not defined.")
+elif wi is None: raise ValueError("Error: wi not defined.")
 
 ################################################################################
 
@@ -228,12 +196,10 @@ def error_relat(valexact,valcomp):
 #     return loss
 def loss_wsumE(enere,enerc,neex,weight):
     loss=0.0
-    if igi==1: # use statistical weight
-        weight=autovarlambda.compbck.gic
+    if igi==1: weight=autovarlambda.compbck.gic
     for i in range(imin,neex): # consider ground energy and/or-only excited states
         diff=error_relat(enere[i],enerc[i])
-        if ifun==1:
-            diff=diff*diff
+        if ifun==1: diff=diff*diff
         loss=loss + weight[i]*diff
     return loss
 
@@ -243,8 +209,7 @@ def var_lambda(x):
     lam0=x[0,:]
     nlam0=len(lam0)
     for i in range(nlam0):
-        if lam0[i] < minlam:
-            lam0[i]=minlam
+        if lam0[i] < minlam: lam0[i]=minlam
     lam0=abs(lam0)
     autovarlambda.run_as(lam0,nlam0)
     neex=autovarlambda.exactbck.ne
@@ -291,7 +256,7 @@ def print_eresults(lam_best,nlam0):
     print("-"*80,file=fener)
     print(" Best results:",file=fener)
     print("-"*80,file=fener)
-    print("\n  lambda={} ".format(lam_best),file=fener)
+    print("\n  lambda={} ".format(lam_best[0]),file=fener)
     print("\n  Ground State Energy ={:12.6f}".format(enerc[0]),
           "\n                  NIST={:12.6f}".format(enere[0]),
           "\n                   Er%={:12.4f} %".format(erroregr),file=fener)
@@ -316,7 +281,7 @@ bounds=[]
 for i in range(NVMX):
     alam=str(i+1)
     if igrid==0:
-        bounds.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (lv[i]-eps_down,lv[i]+eps_up)})
+        bounds.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (minlam,maxlam)})
 
 # Begin loop in "configurations"
 for i in range(ntcfg):
