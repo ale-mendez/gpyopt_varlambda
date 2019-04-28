@@ -1,39 +1,45 @@
 #
-#   yalm input file for varlam_gpyopt v1.1
+#   yalm input file for varlam_gpyopt v1.2
 #
-#   input dictionary:
-#     itype    -- type of algorithm
-#                    = 1 : GP
-#                    = 2 : ... 
-#     igrid    -- type of space grid
-#                    = 0 : continuous
-#                    = 1 : ...
-#     imin     -- consider ground plus/or-only excited states
-#                    = 0 : includ ground state
-#                    = 1 : only excited states
-#     ifun     -- type of loss funtional
-#                    = 0 : use loss as sum of weighted relative errros
-#                    = 1 : use loss as sum of weighted square relative errors
-#     maxevals -- maximum number of evaluations
-#     eps_up   -- superior deviation in lambda values
-#     eps_down -- inferior deviation in lambda values
-#     nlamvar  -- number of lambda values to be varied (max=20)
-#     nener    -- number of energies to be considered (ground + excited)
-#     igi      -- type of weight to be used in minimizing functional
-#                    = 0 : use weight input below
-#                    = 1 : use statistical weight gi = sum 2j+1
-#     weight   -- weight in relative errors (number of elements == neex)
-#     cfgs     -- configurations to be included in the calculation
+#  * input variables:
+#           cfgs     -- configurations to be included in the calculation
+#           maxevals -- number of evaluations in minimization
+#           mtype    -- model type
+#                         ="GP" : Gaussian Process
+#           aftype   -- acquisition function type
+#                         ="EI"     : Expected improvement
+#                         ="MPI"    : Maximum probability of improvement
+#                         ="GP-UCB" : Upper confidence bound
+#           afweight -- acquisition weight (float)
+#           gridtype -- grid type
+#                         ="continuous"
+#           nlamvar  -- number of lambda parameters to be varied
+#           maxlam   -- maximum lambda value
+#           minlam   -- minimum lambda value
+#           mfunc    -- minimization function
+#                         ="Er"    : sum of weighted relative errros
+#                         ="Er**2" : sum of weighted square relative errors
+#           minst    -- states to be included in minimization
+#                         ="gr+ex" : ground and excited states
+#                         ="ex"    : only excited states
+#           nener    -- number of states to be considered in minimization
+#           wi       -- minimization weight
+#                         ="eq"  : all elements are weighted equally
+#                         ="gi"  : use statistical weight gi=sum 2j+1
+#                         ="inp" : read input values (below)
+#           weight   -- weight in relative errors (number of elements == nener)
 #
-itype: 1
-igrid: 0
-imin: 0
-ifun: 1
-maxevals: 1000
-eps_up: 1.0
-eps_down: 0.8
-nlamvar: 20
-nener: 19
-igi: 1
 cfgs:
   - 32
+maxevals: 13
+mtype: "GP"
+aftype: "EI"
+afweight: 1.
+gridtype: "continuous"
+nlamvar: 20
+maxlam: 1.5
+minlam: 0.8
+mfunc: "Er"
+minst: "gr+ex"
+nener: 19
+wi: "gi"

@@ -3,7 +3,7 @@
 # Alejandra Mendez - 22/04/2019
 # v1.1
 #
-#  * this program implements hyperoptimization of NLAMVAR parameters in 
+#  * this program implements hyperoptimization of NLAMVAR parameters in
 #     autosctructure code (max=20)
 #  * the autovarlambda.f90 subroutine is compiled with f2py and incorporated
 #     to this code
@@ -15,28 +15,32 @@
 #     to the amount of energies "nener" considered
 #
 #  * input variables:
-#           itype    -- algorithm type
-#                          = 1 : GP 
-#                          = 2 : ...
-#           igrid    -- type of space grid
-#                          = 0 : continuous
-#                          = 1 : ...
-#           imin     -- consider ground plus/or-only excited states
-#                          = 0 : includ ground state
-#                          = 1 : only excited states
-#           ifun     -- type of loss funtional
-#                          = 0 : use loss as sum of weighted relative errros
-#                          = 1 : use loss as sum of weighted square relative errors
-#           maxevals -- number of evaluations in minimization
-#           eps_up   -- superior deviation in lambda values
-#           eps_down -- inferior deviation in lambda values
-#           nlamvar  -- number of lambda values to be varied
-#           nener    -- number of energies to be considered (ground + excited)
-#           igi      -- type of weight to be used in minimizing functional
-#                          = 0 : use weight input below
-#                          = 1 : use statistical weight gi = sum 2j+1
-#           weight   -- weight in relative errors (number of elements == nener)
 #           cfgs     -- configurations to be included in the calculation
+#           maxevals -- number of evaluations in minimization
+#           mtype    -- model type
+#                         ="GP" : Gaussian Process
+#           aftype   -- acquisition function type
+#                         ="EI"     : Expected improvement
+#                         ="MPI"    : Maximum probability of improvement
+#                         ="GP-UCB" : Upper confidence bound
+#           afweight -- acquisition weight (float)
+#           gridtype -- grid type
+#                         ="continuous"
+#           nlamvar  -- number of lambda parameters to be varied
+#           maxlam   -- maximum lambda value
+#           minlam   -- minimum lambda value
+#           mfunc    -- minimization function
+#                         ="Er"    : sum of weighted relative errros
+#                         ="Er**2" : sum of weighted square relative errors
+#           minst    -- states to be included in minimization
+#                         ="gr+ex" : ground and excited states
+#                         ="ex"    : only excited states
+#           nener    -- number of states to be considered in minimization
+#           wi       -- minimization weight
+#                         ="eq"  : all elements are weighted equally
+#                         ="gi"  : use statistical weight gi=sum 2j+1
+#                         ="inp" : read input values (below)
+#           weight   -- weight in relative errors (number of elements == nener)
 #
 #
 #  * input files:
@@ -57,7 +61,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import autovarlambda
 import time
-from hyperopt import hp, rand, tpe, Trials, fmin
 import pandas as pd
 import yaml
 import GPy
@@ -65,59 +68,124 @@ import GPyOpt
 from numpy.random import seed
 
 # Default parameters
-itype = 1
-igrid = 0
-imin = 0
-ifun = 0
-igi = 1
+mtype="GP"
+aftype="EI"
+afweight=1.
+igrid=0
+imin=0
+ifun=0
+igi=1
 
 # Input parameters
 with open("varlam_gpyopt.yml", 'r') as stream:
-    data_loaded = yaml.full_load(stream)
+    data_loaded=yaml.full_load(stream)
 
-itype = data_loaded.get("itype")
-if itype==1:
-    print(" ==> algorithm type: TPE")
-if itype==2:
-    print(" ==> algorithm type: random")
+try:
+    cfgs=data_loaded.get("cfgs")
+except:
+    raise ValueError("Error: cfgs not defined.")
 
-igrid = data_loaded.get("igrid") 
-if igrid==0:
-    print(" ==> grid type: uniform") 
-if igrid==1:
-    print(" ==> grid type: normal")
+try:
+    maxevals=data_loaded.get("maxevals")
+except:
+    raise ValueError("Error: maxevals not defined.")
 
-imin = data_loaded.get("imin") 
-if imin==0:
-    print(" ==> states included in loss function: ground + excited")
-if imin==1:
-    print(" ==> states included in loss function: excited")
+try:
+    mtype=data_loaded.get("mtype")
+    if mtype=="GP":
+        print(" ==> model type: "+mtype)
+    else:
+        raise ValueError("Error: "+mtype+" not implemented.")
+except:
+    print("Warning: model type not defined. Use default: GP ")
 
-ifun = data_loaded.get("ifun")
-if ifun==0:
-    print(" ==> loss functional: sum of weigthed relative errors")
-if ifun==1:
-    print(" ==> loss functional: sum of weigthed square relative errors")
+try:
+    aftype=data_loaded.get("aftype")
+    if aftype=="EI" or aftype=="MPI" or aftype=="GP-UCB":
+        print(" ==> acquisition function type: "+aftype)
+    else:
+        raise ValueError("Error: "+mtype+" not implemented.")
+except:
+    print("Warning: acquisition function type not defined. Use default: EI ")
 
-maxevals = data_loaded.get("maxevals")
-eps_up = data_loaded.get("eps_up")
-eps_down = data_loaded.get("eps_down")
-eps=eps_down/2.0
-if eps_up > eps_down:
-    eps=eps_up/2.0
-nlamvar = data_loaded.get("nlamvar")
-nener = data_loaded.get("nener")
-igi = data_loaded.get("igi") 
-if igi==0:
-    print("using input weight")
-    listweight = data_loaded.get("weight")
-    NEMX = len(listweight)
-    weight = np.array(listweight)
-if igi==1:
-    print("using statistical weight gi")
-    NEMX = nener
-    weight = np.full(nener,1.)
-cfgs = data_loaded.get("cfgs")
+try:
+    afweight=data_loaded.get("afweight")
+    print(" ==> acquisition function weight: "+afweight)
+except:
+    print("Warning: acquisition function weight not defined. Use default: 1. ")
+
+try:
+    gridtype=data_loaded.get("gridtype")
+    if gridtype=="continuous":
+        igrid=0
+        print(" ==> grid type: "+gridtype)
+    else:
+        raise ValueError("Error: "+gridtype+" not implemented.")
+except:
+    print("Warning: grid type not defined. Use default: continuous")
+
+try:
+    nlamvar=data_loaded.get("nlamvar")
+except:
+    raise ValueError("Error: nlamvar not defined.")
+
+try:
+    maxlam=data_loaded.get("maxlam")
+    minlam=data_loaded.get("minlam")
+except:
+    raise ValueError("Error: maxlam and/or minlam not defined.")
+
+try:
+    mfunc=data_loaded.get("mfunc")
+    if mfunc=="Er":
+        ifun=0
+        print(" ==> minimization function: sum of weigthed relative errors")
+    elif mfunc=="Er**2":
+        ifun=1
+        print(" ==> minimization function: sum of weigthed square relative errors")
+    else:
+        raise ValueError("Error: "+mfunc+" not implemented.")
+except:
+    print("Warning: minimization function not defined. Use default: Er ")
+
+try:
+    minst=data_loaded.get("minst")
+    if minst=="gr+ex":
+        imin=0
+        print(" ==> states included in minimization function: ground + excited")
+    elif minst=="ex":
+        imin=1
+        print(" ==> states included in minimization function: excited")
+    else:
+        raise ValueError("Error: "+minst+" not implemented.")
+except:
+    print("Warning: states to be included in minimization not defined. Use default: ground + excited")
+
+try:
+    nener=data_loaded.get("nener")
+    NEMX=nener
+except:
+    raise ValueError("Error: nener not defined.")
+
+try:
+    wi=data_loaded.get("wi")
+    if wi=="eq" o wi=="gi":
+        weight=np.full(nener,1.)
+        print(" ==> weight type: "+wi)
+    elif wi=="inp":
+        try:
+            inpweight=data_loaded.get("weight")
+            linpw=len(inpweight)
+            if linpw<nener: # fill the missing wi with the last input value
+                for i in range(linpw,nener):
+                    inpweight.append(inpweight[linpw-1])
+            weight=np.array(listweight)
+        except:
+            raise ValueError("Error: weight not defined.")
+except:
+    raise ValueError("Error: wi not defined.")
+
+sys.exit()
 
 ################################################################################
 
@@ -127,7 +195,7 @@ def atom_name(nzion):
     atomname=['0','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg']
     for i in range(len(atomname)):
         if nzion==i:
-            chatom = atomname[i]
+            chatom=atomname[i]
     return chatom
 def pot_type(nzion):
     if nzion < 0:
@@ -138,7 +206,7 @@ def pot_type(nzion):
 
 # Define function for writing iteration number in a human-readable-way
 def human_format(num):
-    magnitude = 0
+    magnitude=0
     while abs(num) >= 1000:
         magnitude += 1
         num /= 1000
@@ -148,41 +216,41 @@ def human_format(num):
 def error_relat(valexact,valcomp):
     if valexact == 0.0 or valcomp == 0.0:
         error=999
-    error = abs((valexact-valcomp)/valexact)*100
+    error=abs((valexact-valcomp)/valexact)*100
     return error
 
 # Loss function defined as weighted sum of energies relative errors
 # def loss_wsumE(enere,enerc,neex,weight):
-#     loss = 0.0
+#     loss=0.0
 #     for i in range(neex):
-#         diff = error_relat(enere[i],enerc[i])
-#         loss = loss + weight[i]*diff
+#         diff=error_relat(enere[i],enerc[i])
+#         loss=loss + weight[i]*diff
 #     return loss
 def loss_wsumE(enere,enerc,neex,weight):
-    loss = 0.0
-    if igi==1: # use statistical weight 
+    loss=0.0
+    if igi==1: # use statistical weight
         weight=autovarlambda.compbck.gic
     for i in range(imin,neex): # consider ground energy and/or-only excited states
-        diff = error_relat(enere[i],enerc[i])
-        if ifun==1: # new functional 
-            diff = diff*diff
-        loss = loss + weight[i]*diff
+        diff=error_relat(enere[i],enerc[i])
+        if ifun==1:
+            diff=diff*diff
+        loss=loss + weight[i]*diff
     return loss
 
 # Define function to be minimized
 def var_lambda(x):
     minlam=0.1
-    lam0 = x[0,:]
-    nlam0 = len(lam0)
+    lam0=x[0,:]
+    nlam0=len(lam0)
     for i in range(nlam0):
         if lam0[i] < minlam:
-            lam0[i] = minlam
-    lam0 = abs(lam0)
+            lam0[i]=minlam
+    lam0=abs(lam0)
     autovarlambda.run_as(lam0,nlam0)
-    neex = autovarlambda.exactbck.ne
-    enere = autovarlambda.eneroutbck.enere
-    enerc = autovarlambda.eneroutbck.enerc
-    loss = loss_wsumE(enere,enerc,neex,weight)
+    neex=autovarlambda.exactbck.ne
+    enere=autovarlambda.eneroutbck.enere
+    enerc=autovarlambda.eneroutbck.enerc
+    loss=loss_wsumE(enere,enerc,neex,weight)
     return loss
 
 # Determine file name string vector from fortran subroutine data
@@ -192,73 +260,69 @@ def def_filename():
     chatom=atom_name(nzion)
     chtype=pot_type(nzion)
     cfgs=str(ncfg)+"CFG"+chtype
-    if itype == 1:
-        chalgo="_GP"
-    if itype == 2:
-        sys.exit("Error: itype == 2 not implemented. stop")
-    filename=chatom+cfgs+chalgo+human_format(maxevals)
+    filename=chatom+cfgs+mtype+human_format(maxevals)
     return ncfg, filename
 
 # Open .out file
 def open_fout(filename,ncfg):
-    fener = open(filename+".out","w")
+    fener=open(filename+".out","w")
     return fener
 
 # Define and initialize variables
 def init_var(NVMX,NEMX):
-    lam0 = np.array(NVMX)
-    nlam0 = NVMX
-    enere = np.zeros(NEMX)
-    enerc = np.zeros(NEMX)
-    neex = int()
+    lam0=np.array(NVMX)
+    nlam0=NVMX
+    enere=np.zeros(NEMX)
+    enerc=np.zeros(NEMX)
+    neex=int()
     return lam0, nlam0, enere, enerc, neex
 
 # Print best results
 def print_eresults(lam_best,nlam0):
     autovarlambda.run_as(lam_best,nlam0)
-    neex = autovarlambda.eneroutbck.neex
-    enere = autovarlambda.eneroutbck.enere
-    enerc = autovarlambda.eneroutbck.enerc
-    loss_best = loss_wsumE(enere,enerc,neex,weight)
-    erroregr = error_relat(enere[0],enerc[0])
+    neex=autovarlambda.eneroutbck.neex
+    enere=autovarlambda.eneroutbck.enere
+    enerc=autovarlambda.eneroutbck.enerc
+    loss_best=loss_wsumE(enere,enerc,neex,weight)
+    erroregr=error_relat(enere[0],enerc[0])
     print("\n===>>> print results in .out <<<===")
-    print("\n Number of evaluations = {:10d}".format(maxevals),file=fener)
-    print("                  Time = {:10.3f} minutes".format(total),file=fener)
+    print("\n Number of evaluations={:10d}".format(maxevals),file=fener)
+    print("                  Time={:10.3f} minutes".format(total),file=fener)
     print("-"*80,file=fener)
     print(" Best results:",file=fener)
     print("-"*80,file=fener)
-    print("\n  lambda = {} ".format(lam_best),file=fener)
-    print("\n  Ground State Energy  = {:12.6f}".format(enerc[0]),
-          "\n                  NIST = {:12.6f}".format(enere[0]),
-          "\n                   Er% = {:12.4f} %".format(erroregr),file=fener)
+    print("\n  lambda={} ".format(lam_best),file=fener)
+    print("\n  Ground State Energy ={:12.6f}".format(enerc[0]),
+          "\n                  NIST={:12.6f}".format(enere[0]),
+          "\n                   Er%={:12.4f} %".format(erroregr),file=fener)
     for i in range(1,neex):
-        errorex = error_relat(enere[i],enerc[i])
-        print("\n       {} Excit. Energy = {:12.6f}".format(i,enerc[i]),
-              "\n                  NIST = {:12.6f}".format(enere[i]),
-              "\n                   Er% = {:12.6f} %".format(errorex),file=fener)
-    print("\n            Total loss = {:12.4f} %".format(loss_best),file=fener)
+        errorex=error_relat(enere[i],enerc[i])
+        print("\n       {} Excit. Energy={:12.6f}".format(i,enerc[i]),
+              "\n                  NIST={:12.6f}".format(enere[i]),
+              "\n                   Er%={:12.6f} %".format(errorex),file=fener)
+    print("\n            Total loss={:12.4f} %".format(loss_best),file=fener)
     fener.close()
 
 ################################################################################
 
 # Initialize variables
-lv = np.full(nlamvar, 1.)
+lv=np.full(nlamvar, 1.)
 NVMX=len(lv)
-ntcfg = len(cfgs)
-lam0, nlam0, enere, enerc, neex = init_var(NVMX,NEMX)
+ntcfg=len(cfgs)
+lam0, nlam0, enere, enerc, neex=init_var(NVMX,NEMX)
 
 # Define the search space domain
 bounds=[]
 for i in range(NVMX):
     alam=str(i+1)
     if igrid==0:
-        bounds.append({'name': 'lam'+alam, 'type': 'continuous', 'domain': (lv[i]-eps_down,lv[i]+eps_up)})
+        bounds.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (lv[i]-eps_down,lv[i]+eps_up)})
 
 # Begin loop in "configurations"
 for i in range(ntcfg):
-    icfg = cfgs[i]
+    icfg=cfgs[i]
     print("\n===>>> RUN {:3d} CFGs <<<===\n".format(icfg))
-    cpdas = "cp das_" + str(icfg) + "CFG das"
+    cpdas="cp das_" + str(icfg) + "CFG das"
     os.system(cpdas)
 # Run initialization f2py subroutines
     autovarlambda.open_files()
@@ -267,43 +331,36 @@ for i in range(ntcfg):
 
 # if "ne" of exactvalues.dat is != than nener of .yaml
 #  => "nener" is considered and ne is dumped
-    dummyne = autovarlambda.exactbck.ne.copy()
+    dummyne=autovarlambda.exactbck.ne.copy()
     if nener != dummyne:
         print(" ************ forcing: neex == nener ************\n")
-        autovarlambda.exactbck.ne = nener
+        autovarlambda.exactbck.ne=nener
 
 # Initialize files and necessary arrays
-    ncfg, filename = def_filename()
+    ncfg, filename=def_filename()
     if ncfg != icfg:
         print(" >>>> configuration mismatch !!!! ")
         sys.exit()
-    fener = open_fout(filename,ncfg)
-
-# Create the algorithm & Trials
-    if itype == 1:
-        algo = tpe.suggest
-        chalgo = "GP"
-    if itype == 2:
-        sys.exit("Error: itype == 2 not implemented. stop")
+    fener=open_fout(filename,ncfg)
 
 # Create object with BO method
     print("===>>> RUN GPyOpt <<<===")
-    t0 = time.time()
-    myBopt = GPyOpt.methods.BayesianOptimization(f=var_lambda,
+    t0=time.time()
+    myBopt=GPyOpt.methods.BayesianOptimization(f=var_lambda,
                                                  domain=bounds,
-                                                 model_type = chalgo,
-                                                 acquisition_type='EI',  
-                                                 normalize_Y = True,
-                                                 acquisition_weight = 2)
+                                                 model_type=mtype,
+                                                 acquisition_type=aftype,
+                                                 normalize_Y=True,
+                                                 acquisition_weight=afweight)
     myBopt.run_optimization(maxevals,verbosity=False)
     myBopt.save_evaluations(filename+".dat")
     myBopt.save_models(filename+".mod")
     myBopt.save_report(filename+".rep")
-    lam_best = myBopt.x_opt
-    nlam0 = len(lam_best)
-    lam_best = lam_best.reshape(-1,nlam0)
-    t1 = time.time()
-    total = (t1-t0)/60.
+    lam_best=myBopt.x_opt
+    nlam0=len(lam_best)
+    lam_best=lam_best.reshape(-1,nlam0)
+    t1=time.time()
+    total=(t1-t0)/60.
 
 # PRINT BEST RESULTS
     print_eresults(lam_best,nlam0)
@@ -312,11 +369,11 @@ for i in range(ntcfg):
 
 # cat .out file
     with open(filename+".out","r") as fp:
-       line = fp.readline()
-       cnt = 1
+       line=fp.readline()
+       cnt=1
        while line:
            print(line,end='')
-           line = fp.readline()
+           line=fp.readline()
     print('')
 
 os.system("rm CONFIG.DAT TERMS LEVELS olg ols oic das")
