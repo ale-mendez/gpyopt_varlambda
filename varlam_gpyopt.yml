@@ -31,15 +31,15 @@
 #
 cfgs:
   - 32
-maxevals: 13
+maxevals: 26
 mtype: "GP"
 aftype: "EI"
 afweight: 1.
 gridtype: "continuous"
-nlamvar: 20
+nlamvar: 3
 maxlam: 1.5
 minlam: 0.8
 mfunc: "Er"
 minst: "gr+ex"
-nener: 19
+nener: 3
 wi: "gi"

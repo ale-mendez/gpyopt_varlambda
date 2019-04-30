@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# Alejandra Mendez - 22/04/2019
-# v1.1
+# Alejandra Mendez - 28/04/2019
+# v1.2
 #
 #  * this program implements hyperoptimization of NLAMVAR parameters in
 #     autosctructure code (max=20)
@@ -44,7 +44,7 @@
 #
 #
 #  * input files:
-#           varlam_hyperopt.yml     -- input file for .py
+#           varlam_gpyopt.yml     -- input file for .py
 #           das_XXCFG               -- autostructure input
 #           exactvalues.dat         -- exact/experimental energy data
 #           f2py_autovarlambda.f90  -- subroutines for variation of lambda
@@ -77,6 +77,7 @@ ifun=0
 igi=1
 
 # Input parameters
+print("\n===>>> Input parameters <<<===\n")
 with open("varlam_gpyopt.yml", 'r') as stream:
     data_loaded=yaml.full_load(stream)
 
@@ -87,23 +88,23 @@ maxevals=data_loaded.get("maxevals")
 if maxevals is None: raise ValueError("Error: maxevals not defined.")
 
 mtype=data_loaded.get("mtype")
-if mtype=="GP": print(" ==> model type: "+mtype)
+if mtype=="GP": print(" * model type: "+mtype)
 elif mtype is None: print("Warning: model type not defined. Use default: GP ")
 else: raise ValueError("Error: "+mtype+" not implemented.")
 
 aftype=data_loaded.get("aftype")
-if aftype=="EI" or aftype=="MPI" or aftype=="GP-UCB": print(" ==> acquisition function type: "+aftype)
+if aftype=="EI" or aftype=="MPI" or aftype=="GP-UCB": print(" * acquisition function type: "+aftype)
 elif aftype is None: print("Warning: acquisition function type not defined. Use default: EI ")
 else: raise ValueError("Error: "+mtype+" not implemented.")
 
 afweight=data_loaded.get("afweight")
-if afweight: print(" ==> acquisition function weight: "+str(afweight))
+if afweight: print(" * acquisition function weight: "+str(afweight))
 elif afweight is None: print("Warning: acquisition function weight not defined. Use default: 1.")
 
 gridtype=data_loaded.get("gridtype")
 if gridtype=="continuous":
     igrid=0
-    print(" ==> grid type: "+gridtype)
+    print(" * grid type: "+gridtype)
 elif gridtype is None: print("Warning: grid type not defined. Use default: continuous")
 else: raise ValueError("Error: "+gridtype+" not implemented.")
 
@@ -117,20 +118,20 @@ if maxlam is None or minlam is None: raise ValueError("Error: maxlam and/or minl
 mfunc=data_loaded.get("mfunc")
 if mfunc=="Er":
     ifun=0
-    print(" ==> minimization function: sum of weigthed relative errors")
+    print(" * minimization function: sum of weigthed relative errors")
 elif mfunc=="Er**2":
     ifun=1
-    print(" ==> minimization function: sum of weigthed square relative errors")
+    print(" * minimization function: sum of weigthed square relative errors")
 elif mfunc is None: print("Warning: minimization function not defined. Use default: Er ")
 else: raise ValueError("Error: "+mfunc+" not implemented.")
 
 minst=data_loaded.get("minst")
 if minst=="gr+ex":
     imin=0
-    print(" ==> states included in minimization function: ground + excited")
+    print(" * states included in minimization: ground + excited")
 elif minst=="ex":
     imin=1
-    print(" ==> states included in minimization function: excited")
+    print(" * states included in minimization: excited")
 elif minst is None: print("Warning: states to be minimized not defined. Use default: ground + excited")
 else: raise ValueError("Error: "+minst+" not implemented.")
 
@@ -143,7 +144,7 @@ if wi=="eq" or wi=="gi":
     if wi=="gi": igi=1
     if wi=="eq": igi=0
     weight=np.full(nener,1.)
-    print(" ==> weight type: "+wi)
+    print(" * weight type: "+wi)
 elif wi=="inp":
     inpweight=data_loaded.get("weight")
     linpw=len(inpweight)
@@ -225,7 +226,7 @@ def def_filename():
     chatom=atom_name(nzion)
     chtype=pot_type(nzion)
     cfgs=str(ncfg)+"CFG"+chtype
-    filename=chatom+cfgs+mtype+human_format(maxevals)
+    filename=chatom+cfgs+"_"+mtype+human_format(maxevals)
     return ncfg, filename
 
 # Open .out file
@@ -250,7 +251,6 @@ def print_eresults(lam_best,nlam0):
     enerc=autovarlambda.eneroutbck.enerc
     loss_best=loss_wsumE(enere,enerc,neex,weight)
     erroregr=error_relat(enere[0],enerc[0])
-    print("\n===>>> print results in .out <<<===")
     print("\n Number of evaluations={:10d}".format(maxevals),file=fener)
     print("                  Time={:10.3f} minutes".format(total),file=fener)
     print("-"*80,file=fener)
@@ -277,11 +277,11 @@ ntcfg=len(cfgs)
 lam0, nlam0, enere, enerc, neex=init_var(NVMX,NEMX)
 
 # Define the search space domain
-bounds=[]
+space=[]
 for i in range(NVMX):
     alam=str(i+1)
     if igrid==0:
-        bounds.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (minlam,maxlam)})
+        space.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (minlam,maxlam)})
 
 # Begin loop in "configurations"
 for i in range(ntcfg):
@@ -298,7 +298,7 @@ for i in range(ntcfg):
 #  => "nener" is considered and ne is dumped
     dummyne=autovarlambda.exactbck.ne.copy()
     if nener != dummyne:
-        print(" ************ forcing: neex == nener ************\n")
+        print(" Warning: forcing neex == nener \n")
         autovarlambda.exactbck.ne=nener
 
 # Initialize files and necessary arrays
@@ -312,12 +312,14 @@ for i in range(ntcfg):
     print("===>>> RUN GPyOpt <<<===")
     t0=time.time()
     myBopt=GPyOpt.methods.BayesianOptimization(f=var_lambda,
-                                                 domain=bounds,
-                                                 model_type=mtype,
-                                                 acquisition_type=aftype,
-                                                 normalize_Y=True,
-                                                 acquisition_weight=afweight)
+                                               domain=space,
+                                               model_type=mtype,
+                                               acquisition_type=aftype,
+                                               normalize_Y=True,
+                                               acquisition_weight=afweight)
     myBopt.run_optimization(maxevals,verbosity=False)
+
+    print("\n===>>> Print results <<<===\n")
     myBopt.save_evaluations(filename+".dat")
     myBopt.save_models(filename+".mod")
     myBopt.save_report(filename+".rep")
@@ -326,20 +328,21 @@ for i in range(ntcfg):
     lam_best=lam_best.reshape(-1,nlam0)
     t1=time.time()
     total=(t1-t0)/60.
-
 # PRINT BEST RESULTS
     print_eresults(lam_best,nlam0)
     autovarlambda.print_ener()
-    os.system("mv error.dat "+filename+"_erp.dat")
+    os.system("mv error.dat "+filename+".erp")
 
 # cat .out file
-    with open(filename+".out","r") as fp:
-       line=fp.readline()
-       cnt=1
-       while line:
-           print(line,end='')
-           line=fp.readline()
-    print('')
+    icat=0
+    if icat==1:
+        with open(filename+".out","r") as fp:
+            line=fp.readline()
+            cnt=1
+            while line:
+                print(line,end='')
+                line=fp.readline()
+        print('')
 
-os.system("rm CONFIG.DAT TERMS LEVELS olg ols oic das")
-os.system("mv tmp das_"+ str(icfg) + "CFG_"+human_format(maxevals)+"best")
+os.system("rm CONFIG.DAT TERMS LEVELS olg ols oic das ")
+os.system("mv tmp "+filename+".das")
