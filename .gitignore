@@ -3,6 +3,8 @@
 *.mod
 *.rep
 *.out
+*.das
+*.erp
 LEVELS 
 OVRLAP
 LEVELS
@@ -12,5 +14,6 @@ tmp
 oic
 ols
 olg
+radout
 das*
 *.so
