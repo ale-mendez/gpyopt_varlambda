@@ -30,7 +30,7 @@
 #           weight   -- weight in relative errors (number of elements == nener)
 #
 cfgs:
-  - 32
+   - 3
 maxevals: 26
 mtype: "GP"
 aftype: "EI"

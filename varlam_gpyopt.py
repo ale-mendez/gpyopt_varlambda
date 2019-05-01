@@ -67,21 +67,13 @@ import GPy
 import GPyOpt
 from numpy.random import seed
 
-# Default parameters
-mtype="GP"
-aftype="EI"
-afweight=1.
-igrid=0
-imin=0
-ifun=0
-igi=1
-
 # Input parameters
 print("\n===>>> Input parameters <<<===\n")
 with open("varlam_gpyopt.yml", 'r') as stream:
     data_loaded=yaml.full_load(stream)
 
 cfgs=data_loaded.get("cfgs")
+ntcfg=len(cfgs)
 if cfgs is None: raise ValueError("Error: cfgs not defined.")
 
 maxevals=data_loaded.get("maxevals")
@@ -89,23 +81,31 @@ if maxevals is None: raise ValueError("Error: maxevals not defined.")
 
 mtype=data_loaded.get("mtype")
 if mtype=="GP": print(" * model type: "+mtype)
-elif mtype is None: print("Warning: model type not defined. Use default: GP")
+elif mtype is None: 
+    mtype="GP"
+    print("Warning: model type not defined. Use default: GP")
 else: raise ValueError("Error: "+mtype+" not implemented.")
 
 aftype=data_loaded.get("aftype")
 if aftype=="EI" or aftype=="MPI" or aftype=="GP-UCB": print(" * acquisition function type: "+aftype)
-elif aftype is None: print("Warning: acquisition function type not defined. Use default: EI ")
+elif aftype is None: 
+    aftype="EI"
+    print("Warning: acquisition function type not defined. Use default: EI")
 else: raise ValueError("Error: "+mtype+" not implemented.")
 
 afweight=data_loaded.get("afweight")
 if afweight: print(" * acquisition function weight: "+str(afweight))
-elif afweight is None: print("Warning: acquisition function weight not defined. Use default: 1.")
+elif afweight is None: 
+    afweight=1.
+    print("Warning: acquisition function weight not defined. Use default: 1.")
 
 gridtype=data_loaded.get("gridtype")
 if gridtype=="continuous":
     igrid=0
     print(" * grid type: "+gridtype)
-elif gridtype is None: print("Warning: grid type not defined. Use default: continuous")
+elif gridtype is None: 
+    igrid=0
+    print("Warning: grid type not defined. Use default: continuous")
 else: raise ValueError("Error: "+gridtype+" not implemented.")
 
 nlamvar=data_loaded.get("nlamvar")
@@ -122,7 +122,9 @@ if mfunc=="Er":
 elif mfunc=="Er**2":
     ifun=1
     print(" * minimization function: sum of weigthed square relative errors")
-elif mfunc is None: print("Warning: minimization function not defined. Use default: Er ")
+elif mfunc is None: 
+    imin=0
+    print("Warning: minimization function not defined. Use default: Er ")
 else: raise ValueError("Error: "+mfunc+" not implemented.")
 
 minst=data_loaded.get("minst")
@@ -132,17 +134,18 @@ if minst=="gr+ex":
 elif minst=="ex":
     imin=1
     print(" * states included in minimization: excited")
-elif minst is None: print("Warning: states to be minimized not defined. Use default: ground + excited")
+elif minst is None: 
+    ifun=0
+    print("Warning: states to be minimized not defined. Use default: ground + excited")
 else: raise ValueError("Error: "+minst+" not implemented.")
 
 nener=data_loaded.get("nener")
-NEMX=nener
 if nener is None: raise ValueError("Error: nener not defined.")
 
 wi=data_loaded.get("wi")
 if wi=="eq" or wi=="gi":
-    if wi=="gi": igi=1
     if wi=="eq": igi=0
+    if wi=="gi": igi=1
     weight=np.full(nener,1.)
     print(" * weight type: "+wi)
 elif wi=="inp":
@@ -154,17 +157,21 @@ elif wi=="inp":
     weight=np.array(listweight)
     if inpweight is None or linpw==0:
         raise ValueError("Error: weight not defined.")
-elif wi is None: raise ValueError("Error: wi not defined.")
+elif wi is None: 
+    igi=1
+    print("Warning: wi not defined. Use default: eq")
+else: raise ValueError("Error: "+wi+"not implemented.")
 
 ################################################################################
 
 # Define useful functions
 def atom_name(nzion):
     nzion=abs(nzion)
-    atomname=['0','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg']
-    for i in range(len(atomname)):
-        if nzion==i:
-            chatom=atomname[i]
+    atomname=['H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg']
+    nname=len(atomname)
+    if nzion>nname: raise ValueError("atomname not defined for Z="+str(nzion))
+    for i in range(nname):
+        if nzion==i+1: chatom=atomname[i] 
     return chatom
 def pot_type(nzion):
     if nzion < 0:
@@ -207,12 +214,8 @@ def loss_wsumE(enere,enerc,neex,weight):
 # Define function to be minimized
 def var_lambda(x):
     minlam=0.1
-    lam0=x[0,:]
-    nlam0=len(lam0)
-    for i in range(nlam0):
-        if lam0[i] < minlam: lam0[i]=minlam
-    lam0=abs(lam0)
-    autovarlambda.run_as(lam0,nlam0)
+    lam=x[0,:]
+    autovarlambda.run_as(lam,nlamvar)
     neex=autovarlambda.exactbck.ne
     enere=autovarlambda.eneroutbck.enere
     enerc=autovarlambda.eneroutbck.enerc
@@ -235,17 +238,15 @@ def open_fout(filename,ncfg):
     return fener
 
 # Define and initialize variables
-def init_var(NVMX,NEMX):
-    lam0=np.array(NVMX)
-    nlam0=NVMX
-    enere=np.zeros(NEMX)
-    enerc=np.zeros(NEMX)
+def init_var(nener):
+    enere=np.zeros(nener)
+    enerc=np.zeros(nener)
     neex=int()
-    return lam0, nlam0, enere, enerc, neex
+    return enere, enerc, neex
 
 # Print best results
-def print_eresults(lam_best,nlam0):
-    autovarlambda.run_as(lam_best,nlam0)
+def print_eresults(lam_best,nlamvar):
+    autovarlambda.run_as(lam_best,nlamvar)
     neex=autovarlambda.eneroutbck.neex
     enere=autovarlambda.eneroutbck.enere
     enerc=autovarlambda.eneroutbck.enerc
@@ -266,19 +267,18 @@ def print_eresults(lam_best,nlam0):
               "\n                  NIST={:12.6f}".format(enere[i]),
               "\n                   Er%={:12.6f} %".format(errorex),file=fener)
     print("\n            Total loss={:12.4f} %".format(loss_best),file=fener)
+    autovarlambda.print_ener()
+    os.system("mv error.dat "+filename+".erp")
     fener.close()
 
 ################################################################################
 
 # Initialize variables
-lv=np.full(nlamvar, 1.)
-NVMX=len(lv)
-ntcfg=len(cfgs)
-lam0, nlam0, enere, enerc, neex=init_var(NVMX,NEMX)
+enere, enerc, neex=init_var(nener)
 
 # Define the search space domain
 space=[]
-for i in range(NVMX):
+for i in range(nlamvar):
     alam=str(i+1)
     if igrid==0:
         space.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (minlam,maxlam)})
@@ -318,20 +318,18 @@ for i in range(ntcfg):
                                                normalize_Y=True,
                                                acquisition_weight=afweight)
     myBopt.run_optimization(maxevals,verbosity=False)
+    t1=time.time()
+    total=(t1-t0)/60.
 
+
+# PRINT RESULTS
+    lam_best=myBopt.x_opt
+    lam_best=lam_best.reshape(-1,nlamvar)
     print("\n===>>> Print results <<<===\n")
     myBopt.save_evaluations(filename+".dat")
     myBopt.save_models(filename+".mod")
     myBopt.save_report(filename+".rep")
-    lam_best=myBopt.x_opt
-    nlam0=len(lam_best)
-    lam_best=lam_best.reshape(-1,nlam0)
-    t1=time.time()
-    total=(t1-t0)/60.
-# PRINT BEST RESULTS
-    print_eresults(lam_best,nlam0)
-    autovarlambda.print_ener()
-    os.system("mv error.dat "+filename+".erp")
+    print_eresults(lam_best,nlamvar)
 
 # cat .out file
     icat=0
