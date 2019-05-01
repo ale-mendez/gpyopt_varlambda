@@ -89,7 +89,7 @@ if maxevals is None: raise ValueError("Error: maxevals not defined.")
 
 mtype=data_loaded.get("mtype")
 if mtype=="GP": print(" * model type: "+mtype)
-elif mtype is None: print("Warning: model type not defined. Use default: GP ")
+elif mtype is None: print("Warning: model type not defined. Use default: GP")
 else: raise ValueError("Error: "+mtype+" not implemented.")
 
 aftype=data_loaded.get("aftype")
