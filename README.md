@@ -1,0 +1,1 @@
+This repository holds computer programs that find the best atomic structure for collision targets  using GPyOpt code. The method implemented varies the lambda parameters that define the one-electron orbitals of the target and minimizes the ground state and excited energies by using a Gaussian Process Bayesian optimization.
