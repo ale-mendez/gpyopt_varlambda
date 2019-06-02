@@ -268,7 +268,7 @@ def print_eresults(lam_best,nlamvar):
               "\n                   Er%={:12.6f} %".format(errorex),file=fener)
     print("\n            Total loss={:12.4f} %".format(loss_best),file=fener)
     autovarlambda.print_ener()
-    os.system("mv error.dat "+filename+".erp")
+    os.system("mv relat_error.dat "+filename+".erp")
     fener.close()
 
 ################################################################################
