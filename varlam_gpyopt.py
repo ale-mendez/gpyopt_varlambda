@@ -78,6 +78,7 @@ if cfgs is None: raise ValueError("Error: cfgs not defined.")
 
 maxevals=data_loaded.get("maxevals")
 if maxevals is None: raise ValueError("Error: maxevals not defined.")
+print(" * evaluations: "+maxevals)
 
 mtype=data_loaded.get("mtype")
 if mtype=="GP": print(" * model type: "+mtype)
