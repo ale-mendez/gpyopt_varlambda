@@ -70,7 +70,7 @@ from numpy.random import seed
 # Input parameters
 print("\n===>>> Input parameters <<<===\n")
 with open("varlam_gpyopt.yml", 'r') as stream:
-    data_loaded=yaml.full_load(stream)
+    data_loaded=yaml.load(stream)
 
 cfgs=data_loaded.get("cfgs")
 ntcfg=len(cfgs)
