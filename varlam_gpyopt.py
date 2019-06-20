@@ -66,6 +66,8 @@ import yaml
 import GPy
 import GPyOpt
 from numpy.random import seed
+seed(123456)
+
 
 # Input parameters
 print("\n===>>> Input parameters <<<===\n")
@@ -76,9 +78,12 @@ cfgs=data_loaded.get("cfgs")
 ntcfg=len(cfgs)
 if cfgs is None: raise ValueError("Error: cfgs not defined.")
 
+initer=10
+print(" * initial evaluations: "+str(initer))
+
 maxevals=data_loaded.get("maxevals")
 if maxevals is None: raise ValueError("Error: maxevals not defined.")
-print(" * evaluations: "+maxevals)
+print(" * evaluations: "+str(maxevals))
 
 mtype=data_loaded.get("mtype")
 if mtype=="GP": print(" * model type: "+mtype)
@@ -88,7 +93,7 @@ elif mtype is None:
 else: raise ValueError("Error: "+mtype+" not implemented.")
 
 aftype=data_loaded.get("aftype")
-if aftype=="EI" or aftype=="MPI" or aftype=="GP-UCB": print(" * acquisition function type: "+aftype)
+if aftype=="EI" or aftype=="MPI" or aftype=="LCB": print(" * acquisition function type: "+aftype)
 elif aftype is None: 
     aftype="EI"
     print("Warning: acquisition function type not defined. Use default: EI")
@@ -316,8 +321,9 @@ for i in range(ntcfg):
                                                domain=space,
                                                model_type=mtype,
                                                acquisition_type=aftype,
-                                               normalize_Y=True,
-                                               acquisition_weight=afweight)
+                                               acquisition_weight=afweight,
+                                               exact_feval = True,
+                                               initial_design_numdata=initer)
     myBopt.run_optimization(maxevals,verbosity=False)
     t1=time.time()
     total=(t1-t0)/60.
