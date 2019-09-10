@@ -2,7 +2,8 @@
 #   yalm input file for varlam_gpyopt v1.2
 #
 #  * input variables:
-#           cfgs     -- configurations to be included in the calculation
+#           cfgs     -- number of configurations to be included in the calculation
+#           initer   -- initial number of evaluations (first prior)
 #           maxevals -- number of evaluations in minimization
 #           mtype    -- model type
 #                         ="GP" : Gaussian Process
@@ -28,18 +29,20 @@
 #                         ="gi"  : use statistical weight gi=sum 2j+1
 #                         ="inp" : read input values (below)
 #           weight   -- weight in relative errors (number of elements == nener)
+#           vpol     -- include polarization potential (True/False)
 #
-cfgs:
-   - 13
-maxevals: 26
+cfgs: 6
+initer: 20
+maxevals: 50
 mtype: "GP"
 aftype: "EI"
-afweight: 1.
+afweight: 0.0001
 gridtype: "continuous"
-nlamvar: 3
-maxlam: 1.5
-minlam: 0.8
+nlamvar: 6
+maxlam: 2.5
+minlam: 0.01
 mfunc: "Er"
 minst: "gr+ex"
 nener: 3
-wi: "gi"
+wi: "eq"
+vpol: True

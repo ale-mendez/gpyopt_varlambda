@@ -8,14 +8,15 @@
 #  * the autovarlambda.f90 subroutine is compiled with f2py and incorporated
 #     to this code
 #  * the autostructure code is executed using system
-#  * multiple configurations can be computed:
-#     "cfgs" defined in .yaml are considered in the computation
+#  * the number of configurations defined by "cfgs" in .yaml is considered 
+#     in the computation
 #  * multiple excited energies can be considered via "nener"
 #  * the number of elements in array "weight" must be equal
 #     to the amount of energies "nener" considered
 #
 #  * input variables:
-#           cfgs     -- configurations to be included in the calculation
+#           cfgs     -- number of configurations to be included in the calculation
+#           initer   -- initial number of evaluations (first prior)
 #           maxevals -- number of evaluations in minimization
 #           mtype    -- model type
 #                         ="GP" : Gaussian Process
@@ -58,7 +59,6 @@ import sys
 
 # Import other stuff
 import numpy as np
-import matplotlib.pyplot as plt
 import autovarlambda
 import time
 import pandas as pd
@@ -67,18 +67,33 @@ import GPy
 import GPyOpt
 from numpy.random import seed
 
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from matplotlib import gridspec
+
+colors=['k','r','g','b','m','y','c','tab:blue',
+        'tab:orange','tab:green','tab:red','tab:purple','tab:brown','tab:pink','tab:gray']
+orb=['1s','2s','2p','3s','3p','3d','4s','4p','4d','4f','5s','5p','5d','5f','5g']
+symbs=['o','s','v','^','>','<','o','o','o','o','o','o','o','o','o']
+
 # Input parameters
+global gridtype, cfgs, maxevals, mtype, aftype, afweight, gridtype, igrid, initer
+global nlamvar, maxlam, minlam, mfunc, ifun, minst, imin, nener, wi, igi
+
 print("\n===>>> Input parameters <<<===\n")
 with open("varlam_gpyopt.yml", 'r') as stream:
     data_loaded=yaml.load(stream)
 
 cfgs=data_loaded.get("cfgs")
-ntcfg=len(cfgs)
 if cfgs is None: raise ValueError("Error: cfgs not defined.")
+
+initer=dat_loaded.get("initer")
+if initerr is None: raise ValueError("Error: initer not defined.")
+print(" * initial evaluations: "+str(initer))
 
 maxevals=data_loaded.get("maxevals")
 if maxevals is None: raise ValueError("Error: maxevals not defined.")
-print(" * evaluations: "+maxevals)
+print(" * evaluations: "+str(maxevals))
 
 mtype=data_loaded.get("mtype")
 if mtype=="GP": print(" * model type: "+mtype)
@@ -88,7 +103,7 @@ elif mtype is None:
 else: raise ValueError("Error: "+mtype+" not implemented.")
 
 aftype=data_loaded.get("aftype")
-if aftype=="EI" or aftype=="MPI" or aftype=="GP-UCB": print(" * acquisition function type: "+aftype)
+if aftype=="EI" or aftype=="MPI" or aftype=="LCB": print(" * acquisition function type: "+aftype)
 elif aftype is None: 
     aftype="EI"
     print("Warning: acquisition function type not defined. Use default: EI")
@@ -119,10 +134,10 @@ if maxlam is None or minlam is None: raise ValueError("Error: maxlam and/or minl
 mfunc=data_loaded.get("mfunc")
 if mfunc=="Er":
     ifun=0
-    print(" * minimization function: sum of weigthed relative errors")
+    print(" * minimization function: sum of weighted relative errors")
 elif mfunc=="Er**2":
     ifun=1
-    print(" * minimization function: sum of weigthed square relative errors")
+    print(" * minimization function: sum of weighted square relative errors")
 elif mfunc is None: 
     imin=0
     print("Warning: minimization function not defined. Use default: Er ")
@@ -158,14 +173,21 @@ elif wi=="inp":
     weight=np.array(listweight)
     if inpweight is None or linpw==0:
         raise ValueError("Error: weight not defined.")
-elif wi is None: 
+elif wi is None:
     igi=1
     print("Warning: wi not defined. Use default: eq")
 else: raise ValueError("Error: "+wi+"not implemented.")
 
+vpol=data_loaded.get("vpol")
+if vpol==True: 
+    print(" * include polarization ON.")
+else:
+    print(" * no polarization.")
+
 ################################################################################
 
 # Define useful functions
+
 def atom_name(nzion):
     nzion=abs(nzion)
     atomname=['H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg']
@@ -174,6 +196,7 @@ def atom_name(nzion):
     for i in range(nname):
         if nzion==i+1: chatom=atomname[i] 
     return chatom
+
 def pot_type(nzion):
     if nzion < 0:
         chtype="STO"
@@ -196,13 +219,6 @@ def error_relat(valexact,valcomp):
     error=abs((valexact-valcomp)/valexact)*100
     return error
 
-# Loss function defined as weighted sum of energies relative errors
-# def loss_wsumE(enere,enerc,neex,weight):
-#     loss=0.0
-#     for i in range(neex):
-#         diff=error_relat(enere[i],enerc[i])
-#         loss=loss + weight[i]*diff
-#     return loss
 def loss_wsumE(enere,enerc,neex,weight):
     loss=0.0
     if igi==1: weight=autovarlambda.compbck.gic
@@ -211,6 +227,25 @@ def loss_wsumE(enere,enerc,neex,weight):
         if ifun==1: diff=diff*diff
         loss=loss + weight[i]*diff
     return loss
+
+# Define the search space domain
+def myspace(minlam,maxlam):
+    space=[]
+    for i in range(nlamvar):
+        alam=str(i+1)
+        space.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (minlam,maxlam)})
+    return space
+
+def mykernel(rbf,stdperiodic):
+    # define RBF kernel a.k.a. squared-exponential (SE)
+    if rbf==1: kernel=GPy.kern.RBF(input_dim=nlamvar,variance=varf,lengthscale=lf,ARD=ARD)
+    if rbf==1 and stdperiodic==1:
+        kernel1=GPy.kern.RBF(input_dim=nlamvar,variance=varf,lengthscale=lf,ARD=ARD)
+        # define a standard periodic kernel
+        kernel2=GPy.kern.StdPeriodic(input_dim=nlamvar,variance=varf,period=None,lengthscale=None,
+                                     ARD1=ARD,ARD2=ARD)
+        kernel=kernel1*kernel2
+    return kernel
 
 # Define function to be minimized
 def var_lambda(x):
@@ -225,28 +260,28 @@ def var_lambda(x):
 
 # Determine file name string vector from fortran subroutine data
 def def_filename():
+    global ncfg, filename
     ncfg=autovarlambda.salgebbck.mxconf
     nzion=autovarlambda.salgebbck.nzion
     chatom=atom_name(nzion)
     chtype=pot_type(nzion)
     cfgs=str(ncfg)+"CFG"+chtype
     filename=chatom+cfgs+"_"+mtype+human_format(maxevals)
-    return ncfg, filename
 
 # Open .out file
-def open_fout(filename,ncfg):
+def open_fout():
+    global fener
     fener=open(filename+".out","w")
-    return fener
 
 # Define and initialize variables
-def init_var(nener):
+def init_var():
     enere=np.zeros(nener)
     enerc=np.zeros(nener)
     neex=int()
     return enere, enerc, neex
 
 # Print best results
-def print_eresults(lam_best,nlamvar):
+def print_eresults(lam_best,nlamvar,filename,fener,total):
     autovarlambda.run_as(lam_best,nlamvar)
     neex=autovarlambda.eneroutbck.neex
     enere=autovarlambda.eneroutbck.enere
@@ -254,7 +289,7 @@ def print_eresults(lam_best,nlamvar):
     loss_best=loss_wsumE(enere,enerc,neex,weight)
     erroregr=error_relat(enere[0],enerc[0])
     print("\n Number of evaluations={:10d}".format(maxevals),file=fener)
-    print("                  Time={:10.3f} minutes".format(total),file=fener)
+    print("                  Time={:10.3f} min".format(total),file=fener)
     print("-"*80,file=fener)
     print(" Best results:",file=fener)
     print("-"*80,file=fener)
@@ -272,67 +307,68 @@ def print_eresults(lam_best,nlamvar):
     os.system("mv relat_error.dat "+filename+".erp")
     fener.close()
 
-################################################################################
-
-# Initialize variables
-enere, enerc, neex=init_var(nener)
-
-# Define the search space domain
-space=[]
-for i in range(nlamvar):
-    alam=str(i+1)
-    if igrid==0:
-        space.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (minlam,maxlam)})
-
-# Begin loop in "configurations"
-for i in range(ntcfg):
-    icfg=cfgs[i]
-    print("\n===>>> RUN {:3d} CFGs <<<===\n".format(icfg))
-    cpdas="cp das_" + str(icfg) + "CFG das"
+def run_mybo(space,kernel,initer,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi):
+    # Initialize variables
+    seed(123456)
+    enere, enerc, neex=init_var()
+    cpdas="cp das_" + str(cfgs) + "CFG das"
     os.system(cpdas)
 # Run initialization f2py subroutines
     autovarlambda.open_files()
     autovarlambda.inp_das()
     autovarlambda.inp_exact()
-
-# if "ne" of exactvalues.dat is != than nener of .yaml
-#  => "nener" is considered and ne is dumped
+# if "ne" of exactvalues.dat is != than nener of .yaml => "nener" is considered and ne is dumped
     dummyne=autovarlambda.exactbck.ne.copy()
     if nener != dummyne:
-        print(" Warning: forcing neex == nener \n")
         autovarlambda.exactbck.ne=nener
-
 # Initialize files and necessary arrays
-    ncfg, filename=def_filename()
-    if ncfg != icfg:
+    def_filename()
+    if ncfg != cfgs:
         print(" >>>> configuration mismatch !!!! ")
         sys.exit()
-    fener=open_fout(filename,ncfg)
-
+    open_fout()
 # Create object with BO method
-    print("===>>> RUN GPyOpt <<<===")
     t0=time.time()
-    myBopt=GPyOpt.methods.BayesianOptimization(f=var_lambda,
-                                               domain=space,
-                                               model_type=mtype,
-                                               acquisition_type=aftype,
-                                               normalize_Y=True,
-                                               acquisition_weight=afweight)
-    myBopt.run_optimization(maxevals,verbosity=False)
+    # define GP model:
+    model=GPyOpt.models.GPModel(kernel=kernel,noise_var=noise_var,exact_feval=exact_feval,
+                                optimizer='lbfgs',optimize_restarts=optimize_restarts,
+                                verbose=False,ARD=ARD)
+    # define constrains
+    constrains=[]
+    for i in range(nlamvar):
+        alam=str(i+1)
+        constrains.append({'name': 'constr_'+alam, 'constraint': '-x[:,'+str(i)+']'})
+    # define space and objective function
+    dspace=GPyOpt.Design_space(space=space,constraints=constrains)
+    objective=GPyOpt.core.task.SingleObjective(var_lambda)
+    # define initial data
+    initial_design=GPyOpt.experiment_design.initial_design('random',dspace,initer)
+    # define acquisition optimizer
+    acquisition_optimizer=GPyOpt.optimization.AcquisitionOptimizer(dspace, optimizer='lbfgs')
+    # define type of acquisition function: Expected Improvement 
+    acquisition=GPyOpt.acquisitions.AcquisitionEI(model,dspace,acquisition_optimizer,jitter=xi)
+    # define sequential evaluator
+    evaluator=GPyOpt.core.evaluators.Sequential(acquisition)
+    myBopt=GPyOpt.methods.ModularBayesianOptimization(model,dspace,objective,acquisition,
+                                                      evaluator,X_init=initial_design)
+    myBopt.run_optimization(maxevals,eps=1e-5,verbosity=False)
+    if nlamvar<=2: myBopt.plot_acquisition(filename+'gp.eps')
     t1=time.time()
     total=(t1-t0)/60.
-
-
-# PRINT RESULTS
+    print("\n Total time: "+str(total)+' min')
+    # PRINT RESULTS
     lam_best=myBopt.x_opt
     lam_best=lam_best.reshape(-1,nlamvar)
-    print("\n===>>> Print results <<<===\n")
+    global fmin
+    fmin=myBopt.fx_opt
+    print(" lam_best=",lam_best[0])
+    print(" fmin=",fmin)
+#         print("\n===>>> Print results <<<===\n")
     myBopt.save_evaluations(filename+".dat")
-    myBopt.save_models(filename+".mod")
-    myBopt.save_report(filename+".rep")
-    print_eresults(lam_best,nlamvar)
-
-# cat .out file
+#    myBopt.save_models(filename+".mod")
+#         myBopt.save_report(filename+".rep")
+    print_eresults(lam_best,nlamvar,filename,fener,total)
+    # cat .out file
     icat=0
     if icat==1:
         with open(filename+".out","r") as fp:
@@ -342,6 +378,22 @@ for i in range(ntcfg):
                 print(line,end='')
                 line=fp.readline()
         print('')
+#     os.system("rm CONFIG.DAT TERMS LEVELS olg ols oic das ")
+    os.system("mv tmp "+filename+".das")
+    return lam_best[0]
 
-os.system("rm CONFIG.DAT TERMS LEVELS olg ols oic das ")
-os.system("mv tmp "+filename+".das")
+################################################################################
+
+noise_var=None
+exact_feval=True
+ARD=True
+varf=2.5
+lf=0.1
+xi=0.0001
+optimize_restarts=5
+
+space=myspace(minlam,maxlam)
+kernel=mykernel(rbf=1,stdperiodic=0)
+
+lam_best=run_mybo(space,kernel,initer,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi)
+
