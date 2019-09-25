@@ -237,7 +237,7 @@ cf2py real*8, intent(in) :: pol(PDIM)
          if(NZION.lt.0) 
      +      write(15,fformat0) NZION,MAXE,NLAM,MXCONF,aorthog,aform,
      +                          ayes,alfd,rcut
-            print*,alfd,rcut
+!            print*,alfd,rcut
       endif
 !      write(15,1008) (lam(i),i=1,nvlam)
       write(15,1008) (lam(i),i=1,ntlam)
@@ -253,13 +253,15 @@ cf2py real*8, intent(in) :: pol(PDIM)
 c***********************************************************************
       integer function removeblanks(string)
 c***********************************************************************
+      implicit none
       character*200 string
       integer i
       do i=1,200
          if(string(i:i+1).eq.'  ') then
             removeblanks=i-1
-            return
+            go to 999
          endif
       enddo
-      return
+
+999   return
       end

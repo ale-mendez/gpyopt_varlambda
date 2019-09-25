@@ -330,14 +330,6 @@ def print_eresults(lam_best,nlamvar,filename,fener,total):
 
 ################################################################################
 
-noise_var=None
-exact_feval=True
-ARD=True
-varf=2.5
-lf=0.1
-xi=0.0001
-optimize_restarts=5
-
 #space=myspace(minlam,maxlam)
 #kernel=mykernel(rbf=1,stdperiodic=0)
 
@@ -348,7 +340,8 @@ optimize_restarts=5
 ################################################################################
 
 def run_mybo_pol(space,kernel,initer,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi):
-    seed(123456)
+    iseed=initer*1000+maxevals*100+(initer*maxevals)*10
+    seed(iseed)
     enere, enerc, neex=init_var()
     cpdas="cp das_" + str(cfgs) + "CFG das"
     os.system(cpdas)
@@ -416,9 +409,17 @@ def run_mybo_pol(space,kernel,initer,maxevals,varf,lf,noise_var,exact_feval,opti
 
     return pol_best[0]
 
+noise_var=None
+exact_feval=True
+ARD=True
+varf=2.5
+lf=0.1
+xi=0.0001
+optimize_restarts=5
+
 alfd=0.05
 rcut=0.7
-eps=50 # porcentage
+eps=30 # porcentage
 space=mypolspace(alfd,rcut,eps)
 kernel=mykernel(rbf=1,stdperiodic=0)
 pol_best=run_mybo_pol(space,kernel,initer,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi)

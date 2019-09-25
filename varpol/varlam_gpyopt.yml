@@ -32,8 +32,8 @@
 #           vpol     -- include polarization potential (True/False)
 #
 cfgs: 6
-initer: 10
-maxevals: 10
+initer: 100
+maxevals: 90
 mtype: "GP"
 aftype: "EI"
 afweight: 0.0001
@@ -43,6 +43,6 @@ maxlam: 2.5
 minlam: 0.01
 mfunc: "Er"
 minst: "gr+ex"
-nener: 3
+nener: 10
 wi: "eq"
 vpol: True
