@@ -23,6 +23,8 @@
       CHARACTER(LEN=4) POTIN,PPOT
       CHARACTER(LEN=6) PRINT,TCC
 
+      real*8 rcut(3)
+
       character*250 das
       integer ndas
       real*8 lam
