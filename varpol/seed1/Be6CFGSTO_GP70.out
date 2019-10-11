@@ -1,50 +1,50 @@
 
  Number of evaluations=        70
-                  Time=     1.509 min
+                  Time=     3.478 min
 --------------------------------------------------------------------------------
  Best results:
 --------------------------------------------------------------------------------
 
-  pol=[0.012516 0.5     ] 
+  pol=[0.00581089 0.41156751] 
 
-  Ground State Energy =  -29.362703 
+  Ground State Energy =  -29.360581 
                   NIST=  -29.336884 
-                   Er%=      0.0880 %
+                   Er%=      0.0808 %
 
-       1 Excit. Energy=  -29.162857 
+       1 Excit. Energy=  -29.160147 
                   NIST=  -29.136586 
-                   Er%=    0.090165 %
+                   Er%=    0.080864 %
 
-       2 Excit. Energy=  -28.899833 
+       2 Excit. Energy=  -28.897657 
                   NIST=  -28.949000 
-                   Er%=    0.169840 %
+                   Er%=    0.177357 %
 
-       3 Excit. Energy=  -28.860833 
+       3 Excit. Energy=  -28.859415 
                   NIST=  -28.862288 
-                   Er%=    0.005040 %
+                   Er%=    0.009953 %
 
-       4 Excit. Energy=  -28.833831 
+       4 Excit. Energy=  -28.832344 
                   NIST=  -28.838628 
-                   Er%=    0.016634 %
+                   Er%=    0.021791 %
 
-       5 Excit. Energy=  -28.716391 
+       5 Excit. Energy=  -28.713701 
                   NIST=  -28.818533 
-                   Er%=    0.354432 %
+                   Er%=    0.363767 %
 
-       6 Excit. Energy=  -28.804819 
+       6 Excit. Energy=  -28.803263 
                   NIST=  -28.800078 
-                   Er%=    0.016462 %
+                   Er%=    0.011059 %
 
-       7 Excit. Energy=  -28.819735 
+       7 Excit. Energy=  -28.816199 
                   NIST=  -28.792894 
-                   Er%=    0.093222 %
+                   Er%=    0.080941 %
 
-       8 Excit. Energy=  -28.782265 
+       8 Excit. Energy=  -28.780541 
                   NIST=  -28.788417 
-                   Er%=    0.021368 %
+                   Er%=    0.027357 %
 
-       9 Excit. Energy=  -28.777911 
+       9 Excit. Energy=  -28.776536 
                   NIST=  -28.771409 
-                   Er%=    0.022599 %
+                   Er%=    0.017820 %
 
-            Total loss=      0.8778 %
+            Total loss=      0.8717 %
