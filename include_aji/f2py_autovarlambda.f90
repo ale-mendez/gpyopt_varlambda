@@ -4,18 +4,24 @@
 !  Alejandra Mendez - 6/03/19
 !  v1.3
 !
-
 !***********************************************************************
       subroutine open_files()
 !***********************************************************************
       implicit none
 
+!... inputs:
       open(unit=20,file='das',status='unknown')
-      open(unit=30,file='exactvalues.dat',status='unknown')
-!...later       open(unit=15,file='tmp',status="unknown")
+!    nist:
+!     later      open(unit=31,file='NIST_cfgs.dat',status='unknown')
+!     later      open(unit=32,file='NIST_terms.dat',status='unknown')
+!     later      open(unit=33,file='NIST_energies.dat',status='unknown')
+!     later      open(unit=34,file='NIST_lines.dat',status='unknown')
+!     later      open(unit=41,file='ols',status='unknown')
+!     later      open(unit=42,file='oic',status='unknown')
+
+!... outputs:
+!... later      open(unit=15,file='tmp',status="unknown")
       open(unit=25,file='relat_error.dat',status="unknown")
-!... later      open(unit=40,file='TERMS',status='unknown')
-!... later      open(unit=25,file='tmp',status='unknown')
 
       return
       end
@@ -138,7 +144,7 @@ cf2py integer, intent(in) :: lpol
       integer i
       character fhead*50,fsalgebini*34,fmxvorb*16,fmxconf*16
       character fsalgebfin*15,fsalgeb*131
-      character arad*4,acup*5
+      character arad*5,acup*5
       character anorb*2,forb*13,fcfg*13
       character fsminim*14,fnzion*15,fend*7,fmaxe*14
       character forthog*16,fprint*15,fradout*16
@@ -175,7 +181,7 @@ cf2py integer, intent(in) :: lpol
 !... write header
       fhead="('A.S. Automatically generated with oompaloompa',/"
 !... write namelist SALGEB
-      fsalgebini="'&SALGEB RAD=',a4,1x,'CUP=',a5,1x,"
+      fsalgebini="'&SALGEB RAD=',a5,1x,'CUP=',a5,1x,"
       if(MXVORB.lt.10) fmxvorb="'MXVORB=',i1,1x,"
       if(MXVORB.ge.10) fmxvorb="'MXVORB=',i2,1x,"
       if(MXVORB.ge.100) fmxvorb="'MXVORB=',i3,1x,"
@@ -184,7 +190,8 @@ cf2py integer, intent(in) :: lpol
       if(MXCONF.ge.100) fmxconf="'MXCONF=',i3,1x,"
       fsalgebfin="'KUTSO=0 &END')"
       fsalgeb=fhead//fsalgebini//fmxvorb//fmxconf//fsalgebfin
-      arad="'NO'"
+!      arad="'NO'"
+      arad="'ALL'"
       acup="'ICM'"
       write(15,fsalgeb) arad,acup,MXVORB,MXCONF
       if(MXVORB.lt.10) write(anorb,'(i1)') MXVORB
@@ -270,3 +277,4 @@ c***********************************************************************
 
 999   return
       end
+
