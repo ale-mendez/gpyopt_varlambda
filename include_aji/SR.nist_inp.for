@@ -1,4 +1,4 @@
-      subroutine inp_exper
+      subroutine inp_obs
 
       open(unit=31,file='NIST_cfgs.dat',status='unknown')
       open(unit=32,file='NIST_terms.dat',status='unknown')
@@ -139,7 +139,7 @@ c... read binding and ionization energies
       integer i,j,itr
       real*8 aji,ei,ek,fvalue
       character acc*3,dum*1,lcf*10,ucf*10,lt*3,ut*3
-      integer lj,uj,ntrane
+      integer lj,uj
       integer iss,ill,ipp
 
       integer icf,ncf
@@ -147,6 +147,7 @@ c... read binding and ionization energies
       integer cfe,se,le,pe,ne
       real*8 ee,egre
       integer lwcfe,lwse,lwle,lwpe,lwgie,upcfe,upse,uple,uppe,upgie
+      integer ntrane
       real*8 akie,facce
       common/cfbck/icf(MXCF),cf(MXCF),ncf
       common/eei_ls/se(MXTN),le(MXTN),pe(MXTN),cfe(MXTN),ee(MXTN),
@@ -174,7 +175,7 @@ c... read binding and ionization energies
          lwgie(itr)=2*lj+1
          upgie(itr)=2*uj+1
          call accuracy_nist(acc,fvalue)
-         facce=fvalue
+         facce(i)=fvalue
          do 210 j=1,ncf
            if(lcf.eq.cf(j)) then
               call SLP(lt,iss,ill,ipp)
@@ -243,7 +244,7 @@ c... read binding and ionization energies
       if(acc.eq.'D+') fvalue=40.d0
       if(acc.eq.'D') fvalue=50.d0
 !... accuracy is worst or equal than fvalue%
-      if(acc.eq.'E') fvalue=50.d0
+      if(acc.eq.'E') fvalue=100.d0
 
       return
       end

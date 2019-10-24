@@ -1,5 +1,6 @@
 !***********************************************************************
-      subroutine ener_out()
+!      subroutine ener_out()
+      subroutine compare_ei()
 !***********************************************************************
 !
 !     details of output:
@@ -16,6 +17,7 @@
       parameter (MXTN=30,MXT=100,LMX=50)
 
       integer i,j
+      real*8 diff,errp
 
       integer ierr
       integer se,le,pe,cfe,ne
@@ -33,7 +35,7 @@
      |              egre,ne
       common/cei_ls/sc(MXT),lc(MXT),pc(MXT),cfc(MXT),gic(MXT),ec(MXT),
      |              egrc,nc
-      common/eneroutbck/enere(LMX),enerc(LMX),neex,ncex
+      common/eicompare/enere(LMX),enerc(LMX),neex,ncex
 
       neex=ne
       ncex=nc
@@ -52,7 +54,7 @@
       enerc(1) = egrc
 
 !... check config and quantum numbers and write absolute energies of excited levels
-      do 100 i=2,ne
+      do 100 i=2,neex
          do 110 j=2,nc
             if(se(i).eq.sc(j).and.le(i).eq.lc(j).and.
      |         pe(i).eq.pc(j).and.cfe(i).eq.cfc(j)) then
@@ -61,6 +63,16 @@
             endif
 110      continue
 100   continue
+
+      write(6,1000) 
+      do 200 i=1,neex
+         diff = enere(i)-enerc(i)
+         if(enere(i).eq.0.d0) goto 200
+         errp = dabs(diff/enere(i))*100.d0
+         write(6,1001) i,enere(i),enerc(i),errp
+200   continue
+1000  format(3x,'i',6x,'observed',4x,'computed',5x,'erp')
+1001  format(1x,i3,1x,3(f12.4))
 
       return
 999    return
@@ -78,18 +90,74 @@
       real*8 enere,enerc
       integer neex,ncex
 
-      common/eneroutbck/enere(LMX),enerc(LMX),neex,ncex
+      common/eicompare/enere(LMX),enerc(LMX),neex,ncex
 
       write(25,1001)
       do 100 i=1,neex
-         if(enere(i).eq.0) goto 100
+         if(enere(i).eq.0.d0) goto 100
          diff = enere(i)-enerc(i)
          errp = dabs(diff/enere(i))*100.d0
          write(25,1000) i,errp,enere(i),enerc(i)
 100   continue
 
 1000  format(i4,3(f12.6,2x))
-1001  format(3x,"i",6x,"er%",10x,"exact",8x,"computed")
+1001  format(3x,"i",6x,"er%",10x,"observed",5x,"computed")
       close(unit=25)
+      return
+      end
+
+!***********************************************************************
+      subroutine compare_aki
+!***********************************************************************
+      implicit none
+      integer MXLTN,MXLT
+      parameter (MXLTN=10,MXLT=250)
+
+      integer i,j
+      real*8 errp
+      character*3 ires
+
+      integer lwcfe,lwse,lwle,lwpe,lwgie,upcfe,upse,uple,uppe,upgie
+      integer ntrane
+      real*8 akie,facce
+      integer lwcfc,lwsc,lwlc,lwpc,lwgic,upcfc,upsc,uplc,uppc,upgic
+      integer ntranc
+      real*8 akic
+      real*8 vakie,vakic
+      integer ntrtot
+
+      common/eaki_ic/lwcfe(MXLTN),lwse(MXLTN),lwle(MXLTN),lwpe(MXLTN),
+     |               lwgie(MXLTN),upcfe(MXLTN),upse(MXLTN),uple(MXLTN),
+     |               uppe(MXLTN),upgie(MXLTN),akie(MXLTN),facce(MXLTN),
+     |               ntrane
+      common/caki_ic/lwcfc(MXLT),lwsc(MXLT),lwlc(MXLT),lwpc(MXLT),
+     |               lwgic(MXLT),upcfc(MXLT),upsc(MXLT),uplc(MXLT),
+     |               uppc(MXLT),upgic(MXLT),akic(MXLT),ntranc
+      common/akicompare/vakie(MXLTN),vakic(MXLTN),ntrtot
+
+      ntrtot=0
+      do 100 i=1,ntrane
+         do 110 j=1,ntranc
+            if (lwcfe(i).eq.lwcfc(j).and.upcfe(i).eq.upcfc(j).and.
+     |          lwse(i).eq.lwsc(j).and.upse(i).eq.upsc(j).and.
+     |          lwle(i).eq.lwlc(j).and.uple(i).eq.uplc(j).and.
+     |          lwgie(i).eq.lwgic(j).and.upgie(i).eq.upgic(j)) then
+               vakie(i)=akie(i)
+               vakic(i)=akic(j)
+               ntrtot=ntrtot+1
+            endif
+110      continue
+100   continue
+
+      write(6,1000)
+      do 200 i=1,ntrtot
+         errp=dabs(vakie(i)-vakic(i))/vakie(i)
+         if(errp.gt.facce(i)) ires='out'
+         if(errp.le.facce(i)) ires='in'
+         write(6,1001) i,vakie(i),vakic(i),errp,facce(i),ires
+200   continue
+1000  format(3x,'i',6x,'observed',4x,'computed',5x,'erp',7x,'acc')
+1001  format(1x,i3,3x,1p,2(e12.3),f10.4,0p,f10.4,a5)
+
       return
       end

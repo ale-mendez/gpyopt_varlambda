@@ -180,10 +180,14 @@ c...later      open(unit=42,file='oic',status='unknown')
       read(41,'(A)') line
       do 200 i=1,80
          dum2=line(i:i+6)
-         if(dum2.eq.'NTERM=') aterm=line(i+7:i+12)
-         if(dum2.eq.'E1/RY=') aegr=line(i+7:i+23)
+         if(dum2.eq.'NTERM=') then
+            aterm=line(i+7:i+12)
+         elseif(dum2.eq.'E1/RY=') then
+            aegr=line(i+7:i+23)
+            goto 201
+         endif
 200   continue
-      read(aterm,*) nc
+201   read(aterm,*) nc
       read(aegr,*) egrc
       read(41,*)
       if (nc.ge.MXT) then
@@ -292,10 +296,14 @@ c... read ground energy, energy levels and quantum numbers
       read(42,'(A)') line
       do 200 i=1,80
          dum2=line(i:i+6)
-         if(dum2.eq.'NLEVEL=') alev=line(i+7:i+12)
-         if(dum2.eq.'E1/RY= ') aegr=line(i+7:i+23)
+         if(dum2.eq.'NLEVEL=') then
+            alev=line(i+7:i+12)
+         elseif(dum2.eq.'E1/RY= ') then
+            aegr=line(i+7:i+23)
+            goto 201
+         endif
 200   continue
-      read(alev,*) nlevels
+201   read(alev,*) nlevels
       read(aegr,*) egr
       read(42,*)
       if (nlevels.ge.MXL) then
