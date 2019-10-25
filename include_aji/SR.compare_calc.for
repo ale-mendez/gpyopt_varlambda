@@ -1,5 +1,4 @@
 !***********************************************************************
-!      subroutine ener_out()
       subroutine compare_ei()
 !***********************************************************************
 !
@@ -16,7 +15,7 @@
       integer MXTN,MXT,LMX
       parameter (MXTN=30,MXT=100,LMX=50)
 
-      integer i,j
+      integer i,j,iprint
       real*8 diff,errp
 
       integer ierr
@@ -64,6 +63,8 @@
 110      continue
 100   continue
 
+      iprint=0
+      if (iprint.eq.1) then
       write(6,1000) 
       do 200 i=1,neex
          diff = enere(i)-enerc(i)
@@ -73,6 +74,7 @@
 200   continue
 1000  format(3x,'i',6x,'observed',4x,'computed',5x,'erp')
 1001  format(1x,i3,1x,3(f12.4))
+      endif
 
       return
 999    return
@@ -113,7 +115,7 @@
       integer MXLTN,MXLT
       parameter (MXLTN=10,MXLT=250)
 
-      integer i,j
+      integer i,j,iprint
       real*8 errp
       character*3 ires
 
@@ -149,6 +151,8 @@
 110      continue
 100   continue
 
+      iprint=0
+      if (iprint.eq.1) then
       write(6,1000)
       do 200 i=1,ntrtot
          errp=dabs(vakie(i)-vakic(i))/vakie(i)
@@ -158,6 +162,7 @@
 200   continue
 1000  format(3x,'i',6x,'observed',4x,'computed',5x,'erp',7x,'acc')
 1001  format(1x,i3,3x,1p,2(e12.3),f10.4,0p,f10.4,a5)
+      endif
 
       return
       end
