@@ -93,18 +93,18 @@ cf2py real*8, intent(in) :: lam0(NVMX)
       end
 
 !***********************************************************************
-      subroutine run_varpol(pol,lpol)
+      subroutine run_varpol(pol,nvarpol)
 !***********************************************************************
       implicit none
       integer PDIM 
-      parameter (PDIM=2)
+      parameter (PDIM=6)
 
       real*8, intent(in) :: pol(PDIM)
-      integer, intent(in) :: lpol
+      integer, intent(in) :: nvarpol
 cf2py real*8, intent(in) :: pol(PDIM)
-cf2py integer, intent(in) :: lpol
+cf2py integer, intent(in) :: nvarpol
 
-      call varpol(pol,lpol)
+      call varpol(pol,nvarpol)
       call write_das()
       call system("~/autovarlambda/asdeck25.x < tmp")
 
@@ -112,21 +112,35 @@ cf2py integer, intent(in) :: lpol
       end
 
 !***********************************************************************
-      subroutine varpol(pol,lpol)
+      subroutine varpol(pol,nvarpol)
 !***********************************************************************
       implicit none
       integer PDIM 
-      parameter (PDIM=2)
+      parameter (PDIM=6)
       real*8, intent (in) :: pol(PDIM)
-      integer, intent(in) :: lpol
-      integer ipol,lrcut
-      real*8 valfd,vrcut
-      common/polbck/valfd,vrcut,ipol,lrcut
+      integer, intent(in) :: nvarpol
 
-      valfd=pol(1)
-      vrcut=pol(2)
-      lrcut=lpol
+      integer i,j,ii
+      integer ipol
+      real*8 ALFD(3),RCUT(3)
+      integer NZION,MAXE,NLAM,MCFMX
+      character*3 ORTHOG
+      common/polbck/ipol
+      common/sminimbck/ALFD,RCUT,NZION,MAXE,NLAM,MCFMX,ORTHOG
+
+!      valfd=pol(1)
+!      vrcut=pol(2)
+!      lrcut=lpol
 !      print*,valfd,vrcut,lrcut
+      ii=0
+      do 100 i=1,nvarpol
+         j=i+ii
+         ALFD(i)=pol(j)
+         RCUT(i)=pol(j+1)
+         ii=ii+1
+100   continue
+!      print*,'alfd=',alfd
+!      print*,'rcut=',rcut
 
       return
       end
@@ -156,21 +170,18 @@ cf2py integer, intent(in) :: lpol
 
       character*250 das
       integer ndas
-      CHARACTER(LEN=5) RAD
-      CHARACTER(LEN=4) CUP
-      CHARACTER(LEN=3) ORTHOG
+      character*5 RAD,CUP*4,ORTHOG*3
       integer MXVORB,MXCONF,KUTSO,NZION,MAXE,NLAM,MCFMX
       real*8 ALFD(3),RCUT(3)
       real*8 lam
       integer nvlam,ntlam,ips
-      integer ipol,lrcut
-      real*8 valfd,vrcut
+      integer ipol
 
       common/dasbck/das(DMX),ndas
       common/salgebbck/MXVORB,MXCONF,KUTSO,RAD,CUP
       common/sminimbck/ALFD,RCUT,NZION,MAXE,NLAM,MCFMX,ORTHOG
       common/lambck/lam(NMX),nvlam,ips,ntlam
-      common/polbck/valfd,vrcut,ipol,lrcut
+      common/polbck/ipol
 
       open(unit=15,file='tmp',status="unknown")
 
@@ -222,8 +233,6 @@ cf2py integer, intent(in) :: lpol
      +      forthog//fprint//fradout
       ib=removeblanks(fformat)
       if(ipol.eq.1) then
-         alfd(lrcut)=valfd
-         rcut(lrcut)=vrcut
          falfd="'ALFD=',2(f6.4,','),f6.4,1x,"
          frcut="'RCUT=',2(f6.4,','),f6.4,1x,"
 !         fpol=falfd//frcut//"'IPOLFN=9999',1x,"
