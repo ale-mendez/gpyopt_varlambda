@@ -1,0 +1,1 @@
+/home/ale/autovarlambda/gpyopt_varlambda/varpol/xtractdata.sh

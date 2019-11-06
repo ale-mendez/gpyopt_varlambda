@@ -32,8 +32,8 @@
 #           vpol     -- include polarization potential (True/False)
 #
 cfgs: 6
-initer: 20
-maxevals: 50
+initer: 2
+maxevals: 2
 mtype: "GP"
 aftype: "EI"
 afweight: 0.0001
@@ -47,3 +47,4 @@ nener: 3
 wi: "eq"
 vpol: True
 iseed: 5745511
+initmap: "latin"

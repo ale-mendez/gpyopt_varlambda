@@ -11,6 +11,6 @@ for i in {1..100}
 do
     grep -i "Total loss" seed_$i/Be*.out >> total_loss.dat
     grep -i "alpha" seed_$i/Be*.out >> params.dat
-    grep -i "rcut" seed_$i/Be*.out >> params.dat
+    grep -i "rho" seed_$i/Be*.out >> params.dat
 done
 
