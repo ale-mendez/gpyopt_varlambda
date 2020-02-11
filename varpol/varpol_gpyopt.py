@@ -242,6 +242,64 @@ def init_var():
     neex=int()
     return enere, enerc, neex
 
+def check_errlog():
+    ierr=0
+    errlog=os.path.exists("errlog")
+    if errlog == True: 
+        ierr=1
+        os.system("rm errlog")
+    autovarlambda.errlogbck.ierr=ierr
+    return
+
+def print_optpol(total,myBopt):
+    global fmin,weight,fener,npolvar,initer,maxevals,filename,iseed
+    pol_best=myBopt.x_opt
+    fmin=myBopt.fx_opt
+    py_runAS_pol(pol_best,npolvar)
+    neex=autovarlambda.eicompare.neex
+    enere=autovarlambda.eicompare.enere
+    enerc=autovarlambda.eicompare.enerc
+    loss_best=loss_sumwE()
+    erelat=[]
+    erroregr=error_relat(enere[0],enerc[0],neex)
+    erelat.append(erroregr)
+    xalpha='\n alpha = '
+    xrho='  rho = '
+    ii=0
+    for i in range(npolvar):
+        j=i+ii
+        xalpha=xalpha+'{vp['+str(j)+']:.{prec}f}'
+        xrho=xrho+'{vp['+str(j+1)+']:.{prec}f}'
+        if j<npolvar: 
+            xalpha=xalpha+' , '
+            xrho=xrho+' , '
+        ii=ii+1
+
+    print("\n    Initial iterations = {:5d}".format(initer),file=fener)
+    print(" Number of evaluations = {:5d}".format(maxevals),file=fener)
+    print("           Random seed = {:8d}".format(iseed),file=fener)
+    print("            Total time = {:.{prec}f} min".format(total,prec=4),file=fener)
+    print("-"*80,file=fener)
+    print(" Best results:",file=fener)
+    print("-"*80,file=fener)
+    print(xalpha.format(vp=pol_best,prec=4),file=fener)
+    print(xrho.format(vp=pol_best,prec=4),file=fener)
+    for i in range(1,neex):
+        errorex=error_relat(enere[i],enerc[i],neex)
+        erelat.append(errorex)
+    print("\n Ji:",file=fener)
+    for i in erelat:
+        print('{:12.4f}'.format(i,),file=fener)
+    print("\n            Total loss = {:12.4f} %".format(loss_best),file=fener)
+    autovarlambda.print_ener()
+    os.system("mv relat_error.dat "+filename+".erp")
+    os.system("mv tmp "+filename+".das")
+    fener.close()
+    return
+
+def clean_up():
+    os.system("rm adas* adf* CONFIG.DAT oic ols olg OMG* TERMS LEVELS")
+
 ########################################################################
 #                             S P A C E S
 ########################################################################
@@ -338,15 +396,6 @@ def loss_total(ii,x):
 
 ########################################################################
 
-def check_errlog():
-    ierr=0
-    errlog=os.path.exists("errlog")
-    if errlog == True: 
-        ierr=1
-        os.system("rm errlog")
-    autovarlambda.errlogbck.ierr=ierr
-    return
-
 def py_runAS_lam(lam,nlamvar):
     check_errlog()
     autovarlambda.run_varlam(lam,nlamvar)
@@ -420,54 +469,6 @@ def run_mybo_pol(iseed,space,kernel,initer,initmap,maxevals,varf,lf,noise_var,ex
     print_optpol(total,myBopt)
     return 
 
-def print_optpol(total,myBopt):
-    global fmin,weight,fener,npolvar,initer,maxevals,filename,iseed
-    pol_best=myBopt.x_opt
-    fmin=myBopt.fx_opt
-    py_runAS_pol(pol_best,npolvar)
-    neex=autovarlambda.eicompare.neex
-    enere=autovarlambda.eicompare.enere
-    enerc=autovarlambda.eicompare.enerc
-    loss_best=loss_sumwE()
-    erelat=[]
-    erroregr=error_relat(enere[0],enerc[0],neex)
-    erelat.append(erroregr)
-    xalpha='\n alpha = '
-    xrho='  rho = '
-    ii=0
-    for i in range(npolvar):
-        j=i+ii
-        xalpha=xalpha+'{vp['+str(j)+']:.{prec}f}'
-        xrho=xrho+'{vp['+str(j+1)+']:.{prec}f}'
-        if j<npolvar: 
-            xalpha=xalpha+' , '
-            xrho=xrho+' , '
-        ii=ii+1
-
-    print("\n    Initial iterations = {:5d}".format(initer),file=fener)
-    print(" Number of evaluations = {:5d}".format(maxevals),file=fener)
-    print("           Random seed = {:8d}".format(iseed),file=fener)
-    print("            Total time = {:.{prec}f} min".format(total,prec=4),file=fener)
-    print("-"*80,file=fener)
-    print(" Best results:",file=fener)
-    print("-"*80,file=fener)
-    print(xalpha.format(vp=pol_best,prec=4),file=fener)
-    print(xrho.format(vp=pol_best,prec=4),file=fener)
-    for i in range(1,neex):
-        errorex=error_relat(enere[i],enerc[i],neex)
-        erelat.append(errorex)
-    print("\n Ji:",file=fener)
-    for i in erelat:
-        print('{:12.4f}'.format(i,),file=fener)
-    print("\n            Total loss = {:12.4f} %".format(loss_best),file=fener)
-    autovarlambda.print_ener()
-    os.system("mv relat_error.dat "+filename+".erp")
-    os.system("mv tmp "+filename+".das")
-    fener.close()
-    return
-
-def clean_up():
-    os.system("rm adas* adf* CONFIG.DAT oic ols olg OMG* TERMS LEVELS")
 
 ########################################################################
 #                        M A I N    P R O G R A M
@@ -475,7 +476,9 @@ def clean_up():
 
 # call input data
 data_input()
+print_input()
 
+# other important variables
 noise_var=None
 exact_feval=True
 ARD=True
@@ -493,8 +496,7 @@ rho_min=[0.200,0.200,0.200]
 npolvar=3
 if npolvar != len(alpha_min):
     print("npolvar .ne. alpha and rho dimension")
-    
-print_input()
+
 space=mypolspace(alpha_min,alpha_max,rho_min,rho_max,npolvar)
 kernel=mykernel(rbf=1,stdperiodic=0)
 run_mybo_pol(iseed,space,kernel,initer,initmap,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi)

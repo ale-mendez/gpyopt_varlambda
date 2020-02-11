@@ -1,0 +1,608 @@
+
+# Alejandra Mendez - 28/04/2019
+# v1.2
+#
+#  * this program implements hyperoptimization of NLAMVAR parameters in
+#     autosctructure code (max=20)
+#  * the autovarlambda.f90 subroutine is compiled with f2py and incorporated
+#     to this code
+#  * the autostructure code is executed using system
+#  * the number of configurations defined by 'cfgs' in .yaml is considered
+#     in the computation
+#  * multiple excited energies can be considered via 'nener'
+#  * the number of elements in array 'weight' must be equal
+#     to the amount of energies 'nener' considered
+#
+#  * input variables:
+#           cfgs     -- number of configurations to be included in the calculation
+#           initer   -- initial number of evaluations (first prior)
+#           maxevals -- number of evaluations in minimization
+#           modpot   -- optimize model potential (True/False)
+#           polpot   -- optimize polarization potential (True/False)
+#           pseudo   -- optimize pseudostates (True/False)
+#           nlamvar  -- number of lambda parameters to be varied
+#           maxlam   -- maximum lambda value
+#           minlam   -- minimum lambda value
+#           cost     -- type of cost function
+#                         ="ener"     : summation of energy er%
+#                         ="aki"      : summation of einstein coefficient er%
+#                         ="ener+aki" : summation of energy and einstein coefficient er%
+#           nener    -- number of states to be considered in minimization (if cost='ener' or 'ener+aki')
+#           ntran    -- number of transitions to be considered in minimization (if cost='aki' or 'ener+aki')
+#           initmap  -- type of initial sampling
+#                         ="random" : random sampling
+#                         ="latin"  : latin hypercube sampling
+#           iseed    -- sets the seed for random initial calculations
+#           gridtype -- grid type
+#                         ="continuous"
+#           mtype    -- model type
+#                         ="GP" : Gaussian Process
+#           aftype   -- acquisition function type
+#                         ="EI"     : Expected improvement
+#                         ="MPI"    : Maximum probability of improvement
+#                         ="GP-UCB" : Upper confidence bound
+#           afweight -- acquisition weight (float)
+#           mfunc    -- minimization function
+#                         ="Er"    : sum of weighted relative errros
+#                         ="Er**2" : sum of weighted square relative errors
+#           minst    -- states to be included in minimization
+#                         ="gr+ex" : ground and excited states
+#                         ="ex"    : only excited states
+#           wi       -- minimization weight
+#                         ="eq"  : all elements are weighted equally
+#                         ="gi"  : use statistical weight gi=sum 2j+1
+#                         ="inp" : read input values (below)
+#           weight   -- weight in relative errors (number of elements == nener)
+#
+#
+#  * input files:
+#           inpvar_gpyopt.yml       -- input file for .py
+#           das_XXCFG               -- autostructure input
+#           NIST_*.dat              -- observed data
+#                                       * cfgs: configurations
+#                                       * terms: energy terms
+#                                       * energies: binding and ionization energies
+#                                       * lines: transition lines
+#           f2py_autovarlambda.f90  -- subroutines for structure optimization
+#           SR.*.for                -- subroutines for structure optimization
+
+# Quietly compile autovarlamba.f90
+import os
+import sys
+# os.system('f2py -c -m autovarlambda f2py_autovarlambda.f90 SR.as_inp.for SR.nist_inp.for SR.compare_calc.for')
+# print('\n===>>> autovarlambda compiled with f2py <<<===')
+
+# Import other stuff
+import numpy as np
+import autovarlambda
+import time
+import yaml
+import GPy
+import GPyOpt
+from numpy.random import seed
+
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from matplotlib import gridspec
+
+colors=['k','r','g','b','m','y','c','tab:blue',
+        'tab:orange','tab:green','tab:red','tab:purple','tab:brown','tab:pink','tab:gray']
+orb=['1s','2s','2p','3s','3p','3d','4s','4p','4d','4f','5s','5p','5d','5f','5g']
+symbs=['o','s','v','^','>','<','o','o','o','o','o','o','o','o','o']
+
+# Input parameters
+global gridtype, cfgs, maxevals, mtype, aftype, afweight, gridtype, igrid, initer, ipol
+global nlamvar, maxlam, minlam, mfunc, ifun, minst, imin, nener, wi, igi, iseed
+global ii, npolvar, initmap, cost, modpot, polpot, pseudo
+
+#########################################################################################################
+# Define functions
+#########################################################################################################
+def lamindex(idxlam):
+#    inmx=autovarlambda.lamidxbck.inmx
+    inmx=45 # check with NMX form fortran subroutine
+    vidxlam=np.zeros(inmx)
+    for i in range(len(idxlam)): vidxlam[i]=idxlam[i]
+    autovarlambda.lamidxbck.idxlam=vidxlam
+    return
+
+def data_input():
+    global gridtype, cfgs, maxevals, mtype, aftype, afweight, gridtype, igrid, initer
+    global ipol, nlamvar, idxlam, maxlam, minlam, mfunc, ifun, minst, imin, nener
+    global ntran, wi, igi, iseed, initmap, cost, modpot, polpot, pseudo
+    print('\n===>>> Input parameters <<<===\n')
+    with open('inpvar_gpyopt.yml', 'r') as stream:
+        data_loaded=yaml.load(stream)
+    cfgs=data_loaded.get('cfgs')
+    initer=data_loaded.get('initer')
+    maxevals=data_loaded.get('maxevals')
+    modpot=data_loaded.get('modpot')
+    polpot=data_loaded.get('polpot')
+    pseudo=data_loaded.get('pseudo')
+    nlamvar=data_loaded.get('nlamvar')
+    idxlam=data_loaded.get('orbs')
+    lamindex(idxlam)
+    maxlam=data_loaded.get('maxlam')
+    minlam=data_loaded.get('minlam')
+    cost=data_loaded.get('cost')
+    nener=data_loaded.get('nener')
+    ntran=data_loaded.get('ntran')
+    initmap=data_loaded.get('initmap')
+    iseed=data_loaded.get('iseed')
+    gridtype=data_loaded.get('gridtype')
+    mtype=data_loaded.get('mtype')
+    aftype=data_loaded.get('aftype')
+    afweight=data_loaded.get('afweight')
+    mfunc=data_loaded.get('mfunc')
+    minst=data_loaded.get('minst')
+    wi=data_loaded.get('wi')
+
+    if cfgs is None: raise ValueError('Error: cfgs not defined.')
+    if initer is None: raise ValueError('Error: initer not defined.')
+    if maxevals is None: raise ValueError('Error: maxevals not defined.')
+    if mtype is None:
+        mtype='GP'
+        print('Warning: model type not defined. Use default: GP')
+#    if mtype!='GP': raise ValueError('Error: '+mtype+' not implemented.')
+    if aftype is None:
+        aftype='EI'
+        print('Warning: acquisition function type not defined. Use default: EI')
+    if aftype!='EI' and aftype!='MPI' and aftype!='GP-UCB': raise ValueError('Error: '+aftype+' not implemented.')
+    if afweight is None:
+        afweight=1.
+        print('Warning: acquisition function weight not defined. Use default: 1.')
+    if gridtype=='continuous':
+        igrid=0
+    elif gridtype is None:
+        igrid=0
+        print('Warning: grid type not defined. Use default: continuous')
+    else: raise ValueError('Error: '+gridtype+' not implemented.')
+    if nlamvar is None: raise ValueError('Error: nlamvar not defined.')
+    if len(idxlam) is None: raise ValueError('Error: orbs not defined.')
+    if maxlam is None or minlam is None: raise ValueError('Error: maxlam and/or minlam not defined.')
+    if mfunc=='Er':
+        ifun=0
+    elif mfunc=='Er**2':
+        ifun=1
+    elif mfunc is None:
+        imin=0
+        print('Warning: minimization function not defined. Use default: Er ')
+    else: raise ValueError('Error: '+mfunc+' not implemented.')
+    if minst=='gr+ex':
+        imin=0
+    elif minst=='ex':
+        imin=1
+    elif minst is None:
+        ifun=0
+        print('Warning: states to be minimized not defined. Use default: ground + excited')
+    else: raise ValueError('Error: '+minst+' not implemented.')
+    if nener is None: raise ValueError('Error: nener not defined.')
+    if wi=='eq' or wi=='gi':
+        if wi=='eq': igi=0
+        if wi=='gi': igi=1
+        weight=np.full(nener,1.)
+    elif wi=='inp':
+        inpweight=data_loaded.get('weight')
+        linpw=len(inpweight)
+        if linpw<nener: # fill the missing wi with the last input value
+            for i in range(linpw,nener):
+                inpweight.append(inpweight[linpw-1])
+        weight=np.array(listweight)
+        if inpweight is None or linpw==0:
+            raise ValueError('Error: weight not defined.')
+    elif wi is None:
+        igi=1
+        print('Warning: wi not defined. Use default: eq')
+    else: raise ValueError('Error: '+wi+'not implemented.')
+    if polpot==True:
+        ipol=1
+        autovarlambda.polbck.ipol=ipol
+    else: ipol=0
+    if iseed is None:
+        iseed=123456.
+        raise ValueError('Warning: iseed = 123456 ')
+    if initmap is None:
+        initmap='latin'
+        raise ValueError('Warning: initmap = latin')
+    if cost is None:
+        cost='ener'
+        raise ValueError('Warning: cost = ener')
+
+def print_input():
+    global gridtype, cfgs, maxevals, mtype, aftype, afweight, gridtype, igrid
+    global initer, ipol, nlamvar, idxlam, maxlam, minlam, mfunc, ifun, minst
+    global imin, nener, wi, igi, iseed, initmap, cost, modpot, pseudo
+    print(' * initial evaluations: '+str(initer))
+    print(' * evaluations: '+str(maxevals))
+    print(' * number of orbitals varied: '+str(nlamvar))
+    print(' * orbitals: ',idxlam)
+    print(' * model type: '+mtype)
+    print(' * acquisition function type: '+aftype)
+    print(' * acquisition function weight: '+str(afweight))
+    print(' * grid type: '+gridtype)
+    if ifun==0: print(' * minimization function: sum of weighted relative errors')
+    if ifun==1: print(' * minimization function: sum of weighted square relative errors')
+    if imin==0: print(' * states included in minimization: ground + excited')
+    if imin==1: print(' * states included in minimization: excited')
+    print(' * weight type: '+wi)
+    if ipol==1: print(' * polarization: yes')
+    if ipol==0: print(' * polarization: no')
+    print(' * iseed: ',iseed)
+    print(' * initmap: ',initmap)
+    print(' * cost: ',cost)
+
+def atom_name(nzion):
+    nzion=abs(nzion)
+    atomname=['H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg']
+    nname=len(atomname)
+    if nzion>nname: raise ValueError('atomname not defined for Z='+str(nzion))
+    for i in range(nname):
+        if nzion==i+1: chatom=atomname[i]
+    return chatom
+
+def pot_type(nzion):
+    if nzion < 0:
+        chtype='STO'
+    else:
+        chtype='TFDA'
+    return chtype
+
+# Define function for writing iteration number in a human-readable-way
+def human_format(num):
+    magnitude=0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000
+    return '%.f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+
+# Determine file name string vector from fortran subroutine data
+def def_filename():
+    global ncfg, filename,initer
+    ncfg=autovarlambda.salgebbck.mxconf
+    nzion=autovarlambda.sminimbck.nzion
+    chatom=atom_name(nzion)
+    chtype=pot_type(nzion)
+    cfgs=str(ncfg)+'CFG'+chtype
+    idrun=str(initer)+mtype+human_format(maxevals)
+    filename=chatom+cfgs+'_'+idrun
+    return
+
+# Open .out file
+def open_fout():
+    global fener,fvals
+    fener=open(filename+'.out','w')
+    fvals=open(filename+'.res','w')
+    return
+
+# Define and initialize variables
+def init_var():
+    enere=np.zeros(nener)
+    enerc=np.zeros(nener)
+    neex=int()
+    return enere, enerc, neex
+
+def check_errlog():
+    ierr=0
+    errlog=os.path.exists('errlog')
+    if errlog == True:
+        ierr=1
+        os.system('rm errlog')
+    autovarlambda.errlogbck.ierr=ierr
+    return
+
+def print_opt(total,myBopt):
+    global fmin,weight,fener,npolvar,initer,maxevals,filename,iseed,nlamvar,cost
+    var_best=myBopt.x_opt
+    fmin=myBopt.fx_opt
+    if fvar=='pol':
+        py_runAS_pol(var_best,npolvar)
+        xalpha='\n'+17*' '+'alpha = '
+        xrho=19*' '+'rho = '
+        ii=0
+        for i in range(npolvar):
+            j=i+ii
+            xalpha=xalpha+'{vp['+str(j)+']:.{prec}f}'
+            xrho=xrho+'{vp['+str(j+1)+']:.{prec}f}'
+            if j<npolvar:
+                xalpha=xalpha+' , '
+                xrho=xrho+' , '
+            ii=ii+1
+    if fvar=='lam':
+        py_runAS_lam(var_best,nlamvar)
+        xlambda='\n'+16*' '+'lambda = '
+        for i in range(nlamvar):
+            xlambda=xlambda+' {vp['+str(i)+']:.{prec}f} '
+    if cost=='ener': loss_best,lerp_best,xp_best=loss_sumwE()
+    if cost=='aki': loss_best,lerp_best,xp_best=loss_sumaki()
+    if cost=='ener+aki':
+        lei,lerp_best,xp_best=loss_sumwE()
+        laki,lerp_best,xp_best=loss_sumaki()
+        loss_best=lei+laki
+    print('\n'+4*' '+'Initial iterations = {:5d}'.format(initer),file=fener)
+    print(' Number of evaluations = {:5d}'.format(maxevals),file=fener)
+    print(11*' '+'Random seed = {:8d}'.format(iseed),file=fener)
+    print(12*' '+'Total time = {:.{prec}f} min\n'.format(total,prec=4),file=fener)
+    print('-'*80,file=fener)
+    print(' Best results:',file=fener)
+    print('-'*80,file=fener)
+    if fvar=='pol':
+        print(xalpha.format(vp=var_best,prec=4),file=fener)
+        print(xrho.format(vp=var_best,prec=4),file=fener)
+    if fvar=='lam':
+        print(xlambda.format(vp=var_best,prec=4),file=fener)
+    if loss_best!=fmin:
+        print("fx_opt = ",fmin,"\nloss_min = ",loss_best)
+        raise ValueError('Error: loss_best!=fmin ')
+    print('\n'+12*' '+'total loss = {:12.4f} %'.format(loss_best),file=fener)
+    print(12*' '+'best loss = {:12.4f} %'.format(fmin),file=fener)
+    autovarlambda.print_ener()
+    autovarlambda.print_aki()
+    os.system('mv relat_error.dat '+filename+'.erp')
+    os.system('mv tmp '+filename+'.das')
+    fener.close()
+    return
+
+def clean_up():
+    os.system('rm das CONFIG.DAT oic ols olg TERMS LEVELS')
+    os.system('if [ -f "adasex.in.form" ]; then rm adas* adf* OMG*; fi')
+
+########################################################################
+#                             S P A C E S
+########################################################################
+
+def lamspace(minlam,maxlam):
+    space=[]
+    for i in range(nlamvar):
+        alam=str(i+1)
+#        space.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (minlam,maxlam)})
+        space.append({'name': 'lam'+alam, 'type': gridtype, 'domain': (minlam[i],maxlam[i])})
+    return space
+
+def polspace(alpha_min,alpha_max,rho_min,rho_max,npolvar):
+    space=[]
+    for i in range(npolvar):
+        apol=str(i)
+        space.append({'name': 'alpha'+apol, 'type': 'continuous', 'domain': (alpha_min[i],alpha_max[i])})
+        space.append({'name': 'rho'+apol, 'type': 'continuous', 'domain': (rho_min[i],rho_max[i])})
+    return space
+
+########################################################################
+#                             K E R N E L S
+########################################################################
+
+def lamkernel(rbf,stdperiodic):
+    if rbf==1: kernel=GPy.kern.RBF(input_dim=nlamvar,variance=varf,lengthscale=lf,ARD=ARD)
+    if rbf==1 and stdperiodic==1:
+        kernel1=GPy.kern.RBF(input_dim=nlamvar,variance=varf,lengthscale=lf,ARD=ARD)
+        kernel2=GPy.kern.StdPeriodic(input_dim=nlamvar,variance=varf,period=None,lengthscale=None,ARD1=ARD,ARD2=ARD)
+        kernel=kernel1*kernel2
+    return kernel
+
+def polkernel(rbf,stdperiodic):
+    if rbf==1: kernel=GPy.kern.RBF(input_dim=2*npolvar,variance=varf,lengthscale=lf,ARD=ARD)
+    return kernel
+
+########################################################################
+#                       C O S T     F U N C T I O N S
+########################################################################
+
+def error_relat(valexact,valcomp,neex):
+    if valexact == 0.0 or valcomp == 0.0:
+        error=5./neex
+    else:
+        error=abs((valexact-valcomp)/valexact)*100
+    return error
+
+def loss_sumwE():
+    global imin,fvals
+    neex=autovarlambda.eei_ls.ne
+    enere=autovarlambda.eicompare.enere
+    enerc=autovarlambda.eicompare.enerc
+    loss=0.0
+    if igi==1: weight=autovarlambda.cei_ls.gic
+    if igi==0: weight=autovarlambda.cei_ls.gic*0+1.
+    lerp=[]
+    xp=' '
+    for i in range(imin,neex): # consider ground energy and/or-only excited states
+        erp=error_relat(enere[i],enerc[i],neex)
+        if ifun==1: erp=erp*erp
+        loss=loss + weight[i]*erp
+        lerp.append(erp)
+        xp=xp+'{erpE['+str(i)+']:.{prec}f} '
+    return loss,lerp,xp
+
+def loss_sumaki():
+    global imin,ntran,akinorm
+    ntrtot=autovarlambda.akicompare.ntrtot
+    if ntran>ntrtot: ntran=ntrtot
+    vakie=autovarlambda.akicompare.vakie
+    vakic=autovarlambda.akicompare.vakic
+    facc=autovarlambda.akicompare.vfacce
+    loss=0.0
+    lerp=[]
+    xp=' '
+    for i in range(imin,ntran): # consider a certain number of transitions
+        erp=error_relat(vakie[i],vakic[i],ntran)
+        if akinorm=='yes': erp=erp/facc[i]
+        if ifun==1: erp=erp*erp
+        loss=loss+erp
+        lerp.append(erp)
+        xp=xp+'{erpA['+str(i)+']:.{prec}f} '
+    return loss,lerp,xp
+
+def loss_total(ii,x):
+    global cost
+    lx=len(x)
+    xp='{:4d}: [ '
+    for i in range(lx):
+        xp=xp+'{vp['+str(i)+']:.{prec}f} '
+    xp=xp+'] // {l1:.{prec}f}'
+    if cost=='ener':
+        lei,lerp,xperp=loss_sumwE()
+        xperp=' {} '+xperp
+        loss=lei
+#        print(xp.format(ii,vp=x,l1=lei,prec=4),file=fener)
+        print(xp.format(ii,vp=x,l1=lei,prec=4))
+        print(xperp.format(loss,erpE=lerp,prec=4),file=fvals)
+    if cost=='aki':
+        laki,lerp,xperp=loss_sumaki()
+        xperp=' {} '+xperp
+        loss=laki
+#        print(xp.format(ii,vp=x,l1=lei,l2=laki,lt=loss,prec=4),file=fener)
+        print(xp.format(ii,vp=x,l1=laki,lt=loss,prec=4))
+        print(xperp.format(loss,erpA=lerp,prec=4),file=fvals)
+    if cost=='ener+aki':
+        lei,lerpE,xpE=loss_sumwE()
+        laki,lerpA,xpA=loss_sumaki()
+        xperp=' {} '+xpE+xpA
+        loss=lei+laki
+        xp=xp+' + {l2:.{prec}e} = {lt:.{prec}e}'
+#        print(xp.format(ii,vp=x,l1=lei,l2=laki,lt=loss,prec=4),file=fener)
+        print(xp.format(ii,vp=x,l1=lei,l2=laki,lt=loss,prec=4))
+        print(xperp.format(loss,erpE=lerpE,erpA=lerpA,prec=4),file=fvals)
+    return loss
+
+########################################################################
+#                           F U N C T I O N S
+########################################################################
+
+def py_runAS_lam(lam,nlamvar):
+    check_errlog()
+    autovarlambda.run_varlam(lam,nlamvar)
+    check_errlog()
+    autovarlambda.inp_comp()
+    autovarlambda.compare_ei()
+    autovarlambda.compare_aki()
+    return
+
+def py_runAS_pol(pol,npolvar):
+    check_errlog()
+    autovarlambda.run_varpol(pol,npolvar)
+    check_errlog()
+    autovarlambda.inp_comp()
+    autovarlambda.compare_ei()
+    autovarlambda.compare_aki()
+    return
+
+def var_lam(x):
+    global ii
+    ii=ii+1
+    lam=x[0,:]
+    py_runAS_lam(lam,nlamvar)
+    loss=loss_total(ii,lam)
+#    print(lam,loss)
+    return loss
+
+def var_pol(x):
+    global ii,npolvar
+    pol=x[0,:]
+    ii=ii+1
+    py_runAS_pol(pol,npolvar)
+    loss=loss_total(ii,pol)
+    return loss
+
+def run_bo(iseed,space,kernel,function,initer,initmap,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi):
+    seed(iseed)
+    enere, enerc, neex=init_var()
+    cpdas='cp das_' + str(cfgs) + 'CFG das'
+    os.system(cpdas)
+    autovarlambda.open_files()
+    autovarlambda.inp_das()
+    autovarlambda.inp_obs()
+    dummyne=autovarlambda.eei_ls.ne.copy()
+    if nener != dummyne:
+        autovarlambda.eei_ls.ne=nener
+    def_filename()
+    if ncfg != cfgs:
+        print(' >>>> configuration mismatch !!!! ')
+        sys.exit()
+    open_fout()
+    t0=time.time()
+    global ii
+    ii=0
+    model=GPyOpt.models.GPModel(kernel=kernel,noise_var=noise_var,exact_feval=exact_feval,
+                                optimizer='lbfgs',max_iters=1500,optimize_restarts=optimize_restarts,
+                                verbose=False,ARD=ARD)
+    dspace=GPyOpt.Design_space(space=space)
+    objective=GPyOpt.core.task.SingleObjective(function)
+    initial_design=GPyOpt.experiment_design.initial_design(initmap,dspace,initer)
+    acquisition_optimizer=GPyOpt.optimization.AcquisitionOptimizer(dspace, optimizer='lbfgs')
+    acquisition=GPyOpt.acquisitions.AcquisitionEI(model,dspace,acquisition_optimizer,jitter=xi)
+    evaluator=GPyOpt.core.evaluators.Sequential(acquisition)
+    myBopt=GPyOpt.methods.ModularBayesianOptimization(model,dspace,objective,acquisition,
+                                                      evaluator,X_init=initial_design,normalize_Y=True,
+                                                      model_update_interval=1)
+    myBopt.run_optimization(maxevals,eps=1e-7,verbosity=False)
+    myBopt.save_evaluations(filename+'.dat')
+    t1=time.time()
+    total=(t1-t0)/60.
+    print_opt(total,myBopt)
+    return
+
+########################################################################
+#                        M A I N    P R O G R A M
+########################################################################
+
+# call input data
+data_input()
+print_input()
+
+#sys.exit()
+
+# other important variables
+noise_var=None
+exact_feval=True
+ARD=True
+varf=2.5
+lf=0.1
+xi=afweight # input
+optimize_restarts=5
+#minlam=[]
+#maxlam=[]
+
+################################
+#    POLARIZATION POTENTIAL    #
+################################
+if polpot==True:
+    print('\n===>>> Optimize Polarization Potential <<<===\n')
+    print('\n * cost = ',cost)
+    # define values for the polarization parameters' space
+    alpha_max=[0.200,0.200,0.200]
+    alpha_min=[0.001,0.001,0.001]
+    rho_max=[1.500,1.500,1.500]
+    rho_min=[0.200,0.200,0.200]
+    npolvar=3
+    if npolvar != len(alpha_min):
+        print('npolvar .ne. alpha and rho dimension')
+
+    fvar='pol'
+    space=polspace(alpha_min,alpha_max,rho_min,rho_max,npolvar)
+    kernel=polkernel(rbf=1,stdperiodic=0)
+    run_bo(iseed,space,kernel,var_pol,initer,initmap,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi)
+    os.system('cp Be*.das das_6CFG')
+    os.system('if [ ! -d pol ]; then mkdir pol; fi')
+    os.system('mv Be* pol/.')
+
+#########################
+#    MODEL POTENTIAL    #
+#########################
+if modpot==True:
+    print('\n===>>> Optimize Model Potential <<<===\n')
+    print('\n * cost = ',cost)
+    fvar='lam'
+    akinorm='yes'  # normalizar los errores relativos de Aki
+    space=lamspace(minlam,maxlam)
+    kernel=lamkernel(rbf=1,stdperiodic=0)
+    run_bo(iseed,space,kernel,var_lam,initer,initmap,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi)
+
+if pseudo==True:
+    print('\n===>>> Optimize Pseudostates <<<===\n')
+    print('\n * cost = ',cost)
+    fvar='lam'
+    akinorm='yes'  # normalizar los errores relativos de Aki
+    space=lamspace(minlam,maxlam)
+    kernel=lamkernel(rbf=1,stdperiodic=0)
+    run_bo(iseed,space,kernel,var_lam,initer,initmap,maxevals,varf,lf,noise_var,exact_feval,optimize_restarts,ARD,xi)
+
+
+# clean_up()

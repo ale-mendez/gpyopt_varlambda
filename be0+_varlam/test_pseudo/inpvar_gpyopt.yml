@@ -1,0 +1,94 @@
+#
+#   yalm input file for var_gpyopt
+#
+#  * input variables:
+#           cfgs     -- number of configurations to be included in the calculation
+#           initer   -- initial number of evaluations (first prior)
+#           maxevals -- number of evaluations in minimization
+#           modpot   -- optimize model potential (True/False)
+#           polpot   -- optimize polarization potential (True/False)
+#           pseudo   -- optimize pseudostates (True/False)
+#           orbs     -- list of orbitals to be varied (spectroscopic format)
+#           maxlam   -- maximum lambda value
+#           minlam   -- minimum lambda value
+#           cost     -- type of cost function
+#                         ="ener"     : summation of energy er%
+#                         ="aki"      : summation of einstein coefficient er%
+#                         ="ener+aki" : summation of energy and einstein coefficient er%
+#           nener    -- number of states to be considered in minimization (if cost='ener' or 'ener+aki')
+#           ntran    -- number of transitions to be considered in minimization (if cost='aki' or 'ener+aki')
+#           initmap  -- type of initial sampling
+#                         ="random" : random sampling
+#                         ="latin"  : latin hypercube sampling
+#           iseed    -- sets the seed for random initial calculations
+#           gridtype -- grid type
+#                         ="continuous"
+#           mtype    -- model type
+#                         ="GP" : Gaussian Process
+#           aftype   -- acquisition function type
+#                         ="EI"     : Expected improvement
+#                         ="MPI"    : Maximum probability of improvement
+#                         ="GP-UCB" : Upper confidence bound
+#           afweight -- acquisition weight (float)
+#           mfunc    -- minimization function
+#                         ="Er"    : sum of weighted relative errros
+#                         ="Er**2" : sum of weighted square relative errors
+#           minst    -- states to be included in minimization
+#                         ="gr+ex" : ground and excited states
+#                         ="ex"    : only excited states
+#           wi       -- minimization weight
+#                         ="eq"  : all elements are weighted equally
+#                         ="gi"  : use statistical weight gi=sum 2j+1
+#                         ="inp" : read input values (below)
+#           weight   -- weight in relative errors (number of elements == nener)
+#
+cfgs: 32
+initer: 5
+maxevals: 5
+modpot: False
+polpot: False
+pseudo: True
+nlamvar: 9
+orbs:
+  - 7  # 4s
+  - 8  # 4p
+  - 9  # 4d
+  - 10  # 4f
+  - 11  # 5s
+  - 12  # 5p
+  - 13  # 5d
+  - 14  # 5f
+  - 15  # 5g
+maxlam:
+  - 1.2
+  - 1.2
+  - 1.2
+  - 1.2
+  - 1.2
+  - 1.2
+  - 1.2
+  - 1.2
+  - 1.2
+minlam:
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+cost: "aki"
+nener: 2
+ntran: 1
+
+initmap: "latin"
+iseed: 523441
+gridtype: "continuous"
+mtype: "GP"
+aftype: "EI"
+afweight: 0.0001
+mfunc: "Er"
+minst: "gr+ex"
+wi: "eq"

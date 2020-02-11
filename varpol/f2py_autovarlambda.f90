@@ -35,7 +35,26 @@ cf2py integer, intent (in) :: NVMX
 cf2py real*8, intent(in) :: lam0(NVMX)
 
       call varlam(lam0,NVMX)
-      call write_das
+      call write_das()
+      call system("~/autovarlambda/asdeck25.x < tmp")
+
+      return
+      end
+
+!***********************************************************************
+      subroutine run_varpol(pol,nvarpol)
+!***********************************************************************
+      implicit none
+      integer PDIM 
+      parameter (PDIM=6)
+
+      real*8, intent(in) :: pol(PDIM)
+      integer, intent(in) :: nvarpol
+cf2py real*8, intent(in) :: pol(PDIM)
+cf2py integer, intent(in) :: nvarpol
+
+      call varpol(pol,nvarpol)
+      call write_das()
       call system("~/autovarlambda/asdeck25.x < tmp")
 
       return
@@ -93,40 +112,28 @@ cf2py real*8, intent(in) :: lam0(NVMX)
       end
 
 !***********************************************************************
-      subroutine run_varpol(pol,nvarpol)
-!***********************************************************************
-      implicit none
-      integer PDIM 
-      parameter (PDIM=6)
-
-      real*8, intent(in) :: pol(PDIM)
-      integer, intent(in) :: nvarpol
-cf2py real*8, intent(in) :: pol(PDIM)
-cf2py integer, intent(in) :: nvarpol
-
-      call varpol(pol,nvarpol)
-      call write_das()
-      call system("~/autovarlambda/asdeck25.x < tmp")
-
-      return
-      end
-
-!***********************************************************************
       subroutine varpol(pol,nvarpol)
 !***********************************************************************
       implicit none
       integer PDIM 
       parameter (PDIM=6)
+      integer NMX
+      parameter (NMX=45)
       real*8, intent (in) :: pol(PDIM)
       integer, intent(in) :: nvarpol
 
       integer i,j,ii
+
       integer ipol
       real*8 ALFD(3),RCUT(3)
       integer NZION,MAXE,NLAM,MCFMX
       character*3 ORTHOG
+      real*8 lam
+      integer nvlam,ntlam,ips
       common/polbck/ipol
       common/sminimbck/ALFD,RCUT,NZION,MAXE,NLAM,MCFMX,ORTHOG
+      common/lambck/lam(NMX),nvlam,ips,ntlam
+!      common/laminpbck/linp(DMX)
 
 !      valfd=pol(1)
 !      vrcut=pol(2)
@@ -141,6 +148,11 @@ cf2py integer, intent(in) :: nvarpol
 100   continue
 !      print*,'alfd=',alfd
 !      print*,'rcut=',rcut
+
+      do i=1,ntlam
+         lam(i) = 1.000
+      enddo
+
 
       return
       end
@@ -184,10 +196,6 @@ cf2py integer, intent(in) :: nvarpol
       common/polbck/ipol
 
       open(unit=15,file='tmp',status="unknown")
-
-      do i=1,ntlam
-         lam(i) = 1.000
-      enddo
 
 !... write header
       fhead="('A.S. Automatically generated with oompaloompa',/"
@@ -262,7 +270,7 @@ cf2py integer, intent(in) :: nvarpol
       endif
 !      write(15,1008) (lam(i),i=1,nvlam)
       write(15,1008) (lam(i),i=1,ntlam)
-      if(NZION.lt.0) write(15,1009) (i,i=1,MXVORB)
+      if(NZION.lt.0) write(15,1009) (i,i=1,MCFMX)
 
 1008  format(5(f12.9,1x))
 1009  format(10(i3))

@@ -1,0 +1,35 @@
+#!/bin/bash 
+#
+# A. Mendez - 15 Mar 2019
+# v1.5
+#
+# Script to use ICFT codes in HOPE
+#
+# Opciones SGE 
+#
+# Junta todos los outputs del job en un solo archivo
+#$ -j y
+# Uso explicito de bash:
+#$ -S /bin/bash
+# Setea 72 horas de wall clock time 
+#$ -l h_rt=72:00:00 
+# Cambia al directorio actual
+#$ -cwd 
+# Exporta las variables de entorno
+#$ -V 
+# Usa la queue que tiene infiniband
+#$ -q iband.q
+
+for i in {71..80}
+do
+   fseed="seed_"$i 
+   iseed=$(( $i*1234+($i-1)*56789 ))
+   echo "seed_"$i 
+   mkdir $fseed
+   sed -i "s/^iseed: .*$/iseed: $iseed/g" inpvar_gpyopt.yml
+   python ./var_gpyopt.py 
+   mv Be* $fseed/.
+done
+
+rm autovarlambda* das* NIST_* var_gpyopt.py 
+mv seed* ../. 

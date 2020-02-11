@@ -27,7 +27,7 @@
 \begin{document}
 \frame{\titlepage}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
+\begin{frame}[t]
 \frametitle{Algunas variables importantes en la optimización de Be}
 \begin{itemize}
 \item Configuraciones en CI 
@@ -47,48 +47,63 @@
 \end{itemize}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
+\begin{frame}[t]
 \frametitle{Parámetros de la optimización}
-
-\begin{center}
-¿Cómo saber si el mínimo hallado en una optimización es el mínimo global?
-\end{center}
 
 \begin{itemize}
 \item Espacio de hiper-parámetros
 \item Diseño inicial
   \begin{itemize}
+    \item Tipo de mapeo (random, latin hypercube, etc.)
     \item Número de datos iniciales
-    \item Tipo de mapeo (random, latin, etc.)
   \end{itemize}
 \item Kernel (squared exponential, periodic, etc.)
 \item Función de adquisión (EI, MPI, etc.)
 \item Presupuesto (máximo número de evaluaciones)
+\item Función costo: 
+  \begin{itemize}
+    \item Suma de errores relativos de energías absolutas de $n$ niveles
+    \item Suma de errores relativos de coeficientes de Einstein de $t$ transiciones
+  \end{itemize}
 \end{itemize}
+
+\begin{center}
+¿Cómo saber si el mínimo hallado en una optimización \\ es el mínimo global?
+
+\medskip
+\color{red}{
+$\rightarrow$ Evaluación del modelo usando 100 semillas diferentes $\leftarrow$}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
+\begin{frame}[t]
 \frametitle{Potencial de polarización}
 
 \begin{itemize}
+\item Número de configuraciones en CI: \texttt{mxconf=6}
 \item Potencial de Norcross (1976)
+\vspace{-0.25cm}
 \begin{equation*}
   V_{\textrm{pol}}(r) = -\frac{\alpha_l}{r^4}\left[1-e^{-\left(\tfrac{r}{\rho_l}\right)^6}\right]
 \end{equation*}
-\item Espacio de hiper--parámetros: \texttt{ndim=6}
-\begin{align*} 
-  \alpha_l &=[0.0010,0.1000] \\
-  \rho_l   &=[0.5000,1.5000] \quad:\quad l=0,1,2
-\end{align*}
-\item Diseño inicial
+\vspace{-0.6cm}
+\item Espacio de hiper--parámetros: \texttt{npolvar=6}
+  \vspace{-0.25cm}
+  \begin{align*} 
+    \alpha_l &=[0.0010,0.2000] \\
+    \rho_l   &=[0.2000,1.5000] \quad:\quad l=0,1,2
+  \end{align*}
+\vspace{-0.8cm}
+\item Diseño inicial:
   \begin{itemize}
+    \item Tipo de mapeo (random, latin hypercube, etc.)
     \item Número de datos iniciales: \texttt{initer}
-    \item Tipo de mapeo (random, latin, etc.)
   \end{itemize}
 \item Kernel: RBF (squared exponential)
 \item Función de adquisión: EI
 \item Presupuesto: \texttt{maxeval}
+\item Función costo: $\sum_i (E_i^{\textrm{obs.}}-E_i^{\textrm{comp.}})/E_i^{\textrm{obs.}})$
 \end{itemize}
 
 %\begin{tikzpicture}[remember picture, overlay]
@@ -98,328 +113,632 @@
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 1a (100 semillas)}
+\frametitle{Estudio de mapeo inicial:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=12}, \texttt{maxeval=12}, \texttt{total=24}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals12/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals12/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals12/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals12/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals12/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals12/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (0,3.5) {\texttt{initer=12}};
+ \node<1> at (-3.8,2.6) {Random};
+ \node<1> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/Jmin_random.eps}};
+ \node<1> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/imin_random.eps}};
+ \node<1> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/minspace_random.eps}};
+ \node<1> at (-3.9,-1.3) {Latin};
+ \node<1> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/Jmin_latin.eps}};
+ \node<1> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/imin_latin.eps}};
+ \node<1> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<2> at (0,3.5) {\texttt{initer=24}};
+ \node<2> at (-3.8,2.6) {Random};
+ \node<2> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/Jmin_random.eps}};
+ \node<2> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/imin_random.eps}};
+ \node<2> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/minspace_random.eps}};
+ \node<2> at (-3.9,-1.3) {Latin};
+ \node<2> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/Jmin_latin.eps}};
+ \node<2> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/imin_latin.eps}};
+ \node<2> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<3> at (0,3.5) {\texttt{initer=36}};
+ \node<3> at (-3.8,2.6) {Random};
+ \node<3> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/Jmin_random.eps}};
+ \node<3> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/imin_random.eps}};
+ \node<3> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/minspace_random.eps}};
+ \node<3> at (-3.9,-1.3) {Latin};
+ \node<3> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/Jmin_latin.eps}};
+ \node<3> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/imin_latin.eps}};
+ \node<3> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<4> at (0,3.5) {\texttt{initer=48}};
+ \node<4> at (-3.8,2.6) {Random};
+ \node<4> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/Jmin_random.eps}};
+ \node<4> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/imin_random.eps}};
+ \node<4> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/minspace_random.eps}};
+ \node<4> at (-3.9,-1.3) {Latin};
+ \node<4> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/Jmin_latin.eps}};
+ \node<4> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/imin_latin.eps}};
+ \node<4> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<5> at (0,3.5) {\texttt{initer=60}};
+ \node<5> at (-3.8,2.6) {Random};
+ \node<5> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/Jmin_random.eps}};
+ \node<5> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/imin_random.eps}};
+ \node<5> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/minspace_random.eps}};
+ \node<5> at (-3.9,-1.3) {Latin};
+ \node<5> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/Jmin_latin.eps}};
+ \node<5> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/imin_latin.eps}};
+ \node<5> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/minspace_latin.eps}};
+\end{tikzpicture}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[t]
+\frametitle{Conclusión:}
+
+\begin{itemize}
+ \item Latin hypercube es la mejor herramienta para hacer el muestreo inicial.
+ \item El número de elementos en el muestreo inicial \texttt{initer} es crucial para reducir 
+el valor máximo que puede tomar la función de costo.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Estudio de presupuesto vs mapeo inicial:}
+
+\begin{tikzpicture}[remember picture, overlay]
+ \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
+ \node<1-> at (-3.8,2.6) {\texttt{maxeval=12}};
+ \node<1-> at (-3.8,-1.3) {\texttt{maxeval=0}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (0,3.5) {\texttt{initer=12}};
+ \node<1> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals12/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals12/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals12/minspace_latin.eps}};
+ \node<1> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/Jmin_latin.eps}};
+ \node<1> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/imin_latin.eps}};
+ \node<1> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals0/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<2> at (0,3.5) {\texttt{initer=24}};
+ \node<2> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals12/Jmin_latin.eps}};
+ \node<2> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals12/imin_latin.eps}};
+ \node<2> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals12/minspace_latin.eps}};
+ \node<2> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/Jmin_latin.eps}};
+ \node<2> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/imin_latin.eps}};
+ \node<2> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals0/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%
+ \node<3> at (0,3.5) {\texttt{initer=36}};
+ \node<3> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals12/Jmin_latin.eps}};
+ \node<3> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals12/imin_latin.eps}};
+ \node<3> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals12/minspace_latin.eps}};
+ \node<3> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/Jmin_latin.eps}};
+ \node<3> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/imin_latin.eps}};
+ \node<3> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals0/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<4> at (0,3.5) {\texttt{initer=48}};
+ \node<4> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals12/Jmin_latin.eps}};
+ \node<4> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals12/imin_latin.eps}};
+ \node<4> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals12/minspace_latin.eps}};
+ \node<4> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/Jmin_latin.eps}};
+ \node<4> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/imin_latin.eps}};
+ \node<4> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals0/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<5> at (0,3.5) {\texttt{initer=60}};
+ \node<5> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals12/Jmin_latin.eps}};
+ \node<5> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals12/imin_latin.eps}};
+ \node<5> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals12/minspace_latin.eps}};
+ \node<5> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/Jmin_latin.eps}};
+ \node<5> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/imin_latin.eps}};
+ \node<5> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals0/minspace_latin.eps}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 1b (100 semillas)}
+\frametitle{Estudio de presupuesto vs mapeo inicial:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=12}, \texttt{maxeval=24}, \texttt{total=36}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals24/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals24/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals24/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals24/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals24/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals24/minspace_latin.eps}};
+ \node<1-> at (-3.8,2.6) {\texttt{maxeval=24}};
+ \node<1-> at (-3.8,-1.3) {\texttt{maxeval=12}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (0,3.5) {\texttt{initer=12}};
+ \node<1> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals24/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals24/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals24/minspace_latin.eps}};
+ \node<1> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals12/Jmin_latin.eps}};
+ \node<1> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals12/imin_latin.eps}};
+ \node<1> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals12/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%
+ \node<2> at (0,3.5) {\texttt{initer=24}};
+ \node<2> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals24/Jmin_latin.eps}};
+ \node<2> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals24/imin_latin.eps}};
+ \node<2> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals24/minspace_latin.eps}};
+ \node<2> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals12/Jmin_latin.eps}};
+ \node<2> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals12/imin_latin.eps}};
+ \node<2> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals12/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<3> at (0,3.5) {\texttt{initer=36}};
+ \node<3> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals24/Jmin_latin.eps}};
+ \node<3> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals24/imin_latin.eps}};
+ \node<3> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals24/minspace_latin.eps}};
+ \node<3> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals12/Jmin_latin.eps}};
+ \node<3> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals12/imin_latin.eps}};
+ \node<3> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals12/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<4> at (0,3.5) {\texttt{initer=48}};
+ \node<4> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals24/Jmin_latin.eps}};
+ \node<4> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals24/imin_latin.eps}};
+ \node<4> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals24/minspace_latin.eps}};
+ \node<4> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals12/Jmin_latin.eps}};
+ \node<4> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals12/imin_latin.eps}};
+ \node<4> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals12/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<5> at (0,3.5) {\texttt{initer=60}};
+ \node<5> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals24/Jmin_latin.eps}};
+ \node<5> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals24/imin_latin.eps}};
+ \node<5> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals24/minspace_latin.eps}};
+ \node<5> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals12/Jmin_latin.eps}};
+ \node<5> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals12/imin_latin.eps}};
+ \node<5> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals12/minspace_latin.eps}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 1c (100 semillas)}
+\frametitle{Estudio de presupuesto vs mapeo inicial:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=12}, \texttt{maxeval=48}, \texttt{total=60}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals48/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals48/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals48/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals48/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals48/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals48/minspace_latin.eps}};
+ \node<1-> at (-3.8,2.6) {\texttt{maxeval=36}};
+ \node<1-> at (-3.8,-1.3) {\texttt{maxeval=24}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (0,3.5) {\texttt{initer=12}};
+ \node<1> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals36/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals36/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals36/minspace_latin.eps}};
+ \node<1> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals24/Jmin_latin.eps}};
+ \node<1> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals24/imin_latin.eps}};
+ \node<1> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer12/maxevals24/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%
+ \node<2> at (0,3.5) {\texttt{initer=24}};
+ \node<2> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals36/Jmin_latin.eps}};
+ \node<2> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals36/imin_latin.eps}};
+ \node<2> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals36/minspace_latin.eps}};
+ \node<2> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals24/Jmin_latin.eps}};
+ \node<2> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals24/imin_latin.eps}};
+ \node<2> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer24/maxevals24/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<3> at (0,3.5) {\texttt{initer=36}};
+ \node<3> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals36/Jmin_latin.eps}};
+ \node<3> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals36/imin_latin.eps}};
+ \node<3> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals36/minspace_latin.eps}};
+ \node<3> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals24/Jmin_latin.eps}};
+ \node<3> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals24/imin_latin.eps}};
+ \node<3> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer36/maxevals24/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<4> at (0,3.5) {\texttt{initer=48}};
+ \node<4> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals36/Jmin_latin.eps}};
+ \node<4> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals36/imin_latin.eps}};
+ \node<4> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals36/minspace_latin.eps}};
+ \node<4> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals24/Jmin_latin.eps}};
+ \node<4> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals24/imin_latin.eps}};
+ \node<4> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer48/maxevals24/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<5> at (0,3.5) {\texttt{initer=60}};
+ \node<5> at (-4,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals36/Jmin_latin.eps}};
+ \node<5> at (0,1.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals36/imin_latin.eps}};
+ \node<5> at (4,1.4) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals36/minspace_latin.eps}};
+ \node<5> at (-4,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals24/Jmin_latin.eps}};
+ \node<5> at (0,-2.5) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals24/imin_latin.eps}};
+ \node<5> at (4,-2.5) {\includegraphics[trim={0 0 0 0},clip,width=0.33\textwidth]{figures/pol_conv/initer60/maxevals24/minspace_latin.eps}};
+\end{tikzpicture}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[t]
+\frametitle{Potencial modelo}
+
+\begin{itemize}
+\item Número de configuraciones en CI: \texttt{mxconf}
+\item Potencial Slater-Type-Orbital de Burgess
+\item Espacio de hiper--parámetros: \texttt{nlamvar}
+  \vspace{-0.25cm}
+  \begin{align*} 
+    \lambda_{nl} &=[0.5,1.5] 
+  \end{align*}
+\vspace{-0.8cm}
+\item Diseño inicial: 
+  \begin{itemize}
+    \item Latin hypercube 
+    \item Número de datos iniciales: \texttt{initer}
+  \end{itemize}
+\item Kernel: RBF (squared exponential)
+\item Función de adquisión: EI
+\item Presupuesto: \texttt{maxeval}
+\item Función costo: 
+  \begin{itemize}
+    \item $\sum_i (E_i^{\textrm{obs.}}-E_i^{\textrm{comp.}})/E_i^{\textrm{obs.}})$
+    \item $\sum_k (A_{ki}^{\textrm{obs.}}-A_{ki}^{\textrm{comp.}})/A_{ki}^{\textrm{obs.}})$
+  \end{itemize}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[t]
+\frametitle{Estudio de $A_{ki}$}
+
+\begin{itemize}
+\item Número de configuraciones en CI: \texttt{mxconf=32}
+\item Espacio de hiper--parámetros: \texttt{nlamvar=6} 
+  \vspace{-0.25cm}
+  \begin{align*} 
+    \lambda_{nl} &=[0.5,1.5] \quad:\quad n\le 3,\,l\le 2
+  \end{align*}
+\vspace{-0.8cm}
+\item Diseño inicial: 
+  \begin{itemize}
+    \item Latin hypercube
+    \item Número de datos iniciales: \texttt{initer=60}
+  \end{itemize}
+\item Presupuesto: \texttt{maxeval=24}
+\item Función costo: \texttt{ntran=} $t$
+$$J=\sum_k^{t} \frac{1}{e_t}\left|\frac{A_{ki}^{\textrm{obs.}}-A_{ki}^{\textrm{comp.}}}{A_{ki}^{\textrm{obs.}}}\right|$$
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
+
+\begin{tikzpicture}[remember picture, overlay]
+ \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
+ \node<1> at (-4.2,2.6) {\texttt{ntran=3}};
+ \node<1> at (-4.2,-1.2) {\texttt{ntran=5}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1-> at (0,3.55) {\texttt{initer=60, maxevals=24}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran3/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran3/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran3/minspace_latin.eps}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran5/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran5/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran5/minspace_latin.eps}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<2> at (4.2,3.3) {\texttt{ntran=3}};
+ \node<2> at (4.2,-0.5) {\texttt{ntran=5}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam6/ntran3/akierp_latin.eps}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam6/ntran5/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam6/ntran3/erpmin_latin.pdf}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam6/ntran5/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 1d (100 semillas)}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=12}, \texttt{maxeval=96}, \texttt{total=108}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals100/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals100/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals100/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals100/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals100/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer12_maxevals100/minspace_latin.eps}};
+ \node<1-> at (0,3.55) {\texttt{initer=60, maxevals=24}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-4.2,2.6) {\texttt{nlamvar=6}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran5/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran5/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam6/ntran5/minspace_latin.eps}};
+ \node<2> at (4.2,3.3) {\texttt{nlamvar=6}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam6/ntran5/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam6/ntran5/erpmin_latin.pdf}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-4.2,-1.2) {\texttt{nlamvar=5}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/minspace_latin.eps}};
+ \node<2> at (4.2,-0.5) {\texttt{nlamvar=5}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/akierp_latin.eps}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 2a (100 semillas)}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=24}, \texttt{maxeval=24}, \texttt{total=48}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals24/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals24/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals24/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals24/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals24/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals24/minspace_latin.eps}};
+ \node<1-> at (0,3.55) {\texttt{initer=60}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,2.6) {\texttt{maxeval=24}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/minspace_latin.eps}};
+ \node<2> at (4.2,3.3) {\texttt{maxeval=24}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals24/erpmin_latin.pdf}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,-1.3) {\texttt{maxeval=48}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/minspace_latin.eps}};
+ \node<2> at (4.2,-0.5) {\texttt{maxeval=48}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/akierp_latin.eps}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 2b (100 semillas)}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=24}, \texttt{maxeval=48}, \texttt{total=72}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals48/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals48/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals48/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals48/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals48/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals48/minspace_latin.eps}};
+ \node<1-> at (0,3.55) {\texttt{initer=60}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,2.6) {\texttt{maxeval=48}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/minspace_latin.eps}};
+ \node<2> at (4.2,3.3) {\texttt{maxeval=48}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals48/erpmin_latin.pdf}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,-1.3) {\texttt{maxeval=60}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals60/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals60/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals60/minspace_latin.eps}};
+ \node<2> at (4.2,-0.5) {\texttt{maxeval=60}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals60/akierp_latin.eps}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer60_maxevals60/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 2c (100 semillas)}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=24}, \texttt{maxeval=96}, \texttt{total=120}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals100/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals100/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals100/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals100/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals100/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer24_maxevals100/minspace_latin.eps}};
+ \node<1-> at (0,3.55) {\texttt{initer=72}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,2.6) {\texttt{maxeval=24}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals24/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals24/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals24/minspace_latin.eps}};
+ \node<2> at (4.2,3.3) {\texttt{maxeval=24}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals24/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals24/erpmin_latin.pdf}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,-1.3) {\texttt{maxeval=48}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/minspace_latin.eps}};
+ \node<2> at (4.2,-0.5) {\texttt{maxeval=48}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/akierp_latin.eps}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 3a (100 semillas)}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=36}, \texttt{maxeval=36}, \texttt{total=72}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals36/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals36/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals36/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals36/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals36/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals36/minspace_latin.eps}};
+ \node<1-> at (0,3.55) {\texttt{initer=72}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,2.6) {\texttt{maxeval=48}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/minspace_latin.eps}};
+ \node<2> at (4.2,3.3) {\texttt{maxeval=48}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals48/erpmin_latin.pdf}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,-1.3) {\texttt{maxeval=60}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals60/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals60/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals60/minspace_latin.eps}};
+ \node<2> at (4.2,-0.5) {\texttt{maxeval=60}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals60/akierp_latin.eps}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer72_maxevals60/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 3b (100 semillas)}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=36}, \texttt{maxeval=72}, \texttt{total=108}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals72/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals72/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals72/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals72/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals72/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer36_maxevals72/minspace_latin.eps}};
+ \node<1-> at (0,3.55) {\texttt{initer=120}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,2.6) {\texttt{maxeval=60}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals60/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals60/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals60/minspace_latin.eps}};
+ \node<2> at (4.2,3.3) {\texttt{maxeval=60}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals60/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals60/erpmin_latin.pdf}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,-1.3) {\texttt{maxeval=120}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals120/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals120/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals120/minspace_latin.eps}};
+ \node<2> at (4.2,-0.5) {\texttt{maxeval=120}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals120/akierp_latin.eps}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer120_maxevals120/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 4a (100 semillas)}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=48}, \texttt{maxeval=48}, \texttt{total=96}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals48/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals48/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals48/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals48/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals48/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals48/minspace_latin.eps}};
+ \node<1-> at (0,3.55) {\texttt{initer=180}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,2.6) {\texttt{maxeval=60}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals60/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals60/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals60/minspace_latin.eps}};
+ \node<2> at (4.2,3.3) {\texttt{maxeval=60}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals60/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals60/erpmin_latin.pdf}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,-1.3) {\texttt{maxeval=120}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/minspace_latin.eps}};
+ \node<2> at (4.2,-0.5) {\texttt{maxeval=120}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/akierp_latin.eps}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Diseño 4b (100 semillas)}
+\frametitle{Minimización de $t$ transiciones normalizadas:}
 
 \begin{tikzpicture}[remember picture, overlay]
  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=48}, \texttt{maxeval=60}, \texttt{total=108}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals60/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals60/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals60/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals60/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals60/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer48_maxevals60/minspace_latin.eps}};
-\end{tikzpicture}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Diseño 5a (100 semillas)}
-
-\begin{tikzpicture}[remember picture, overlay]
- \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=60}, \texttt{maxeval=60}, \texttt{total=120}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals60/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals60/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals60/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals60/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals60/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals60/minspace_latin.eps}};
-\end{tikzpicture}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Diseño 5b (100 semillas)}
-
-\begin{tikzpicture}[remember picture, overlay]
- \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=60}, \texttt{maxeval=120}, \texttt{total=180}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals120/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals120/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals120/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals120/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals120/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space1/initer60_maxevals120/minspace_latin.eps}};
+ \node<1-> at (0,3.55) {\texttt{maxeval=120}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,2.6) {\texttt{initer=180}};
+ \node<1> at (-4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/Jmin_latin.eps}};
+ \node<1> at (0,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/imin_latin.eps}};
+ \node<1> at (4,1.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/minspace_latin.eps}};
+ \node<2> at (4.2,3.3) {\texttt{initer=180}};
+ \node<2> at (-3,1.3) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/akierp_latin.eps}};
+ \node<2> at (3.75,1.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer180_maxevals120/erpmin_latin.pdf}};
+%%%%%%%%%%%%%%%%%%%%
+ \node<1> at (-3.8,-1.3) {\texttt{initer=240}};
+ \node<1> at (-4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer240_maxevals120/Jmin_latin.eps}};
+ \node<1> at (0,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer240_maxevals120/imin_latin.eps}};
+ \node<1> at (4,-2.4) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam5/ntran5/initer240_maxevals120/minspace_latin.eps}};
+ \node<2> at (4.2,-0.5) {\texttt{initer=240}};
+ \node<2> at (-3,-2.6) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer240_maxevals120/akierp_latin.eps}};
+ \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam5/ntran5/initer240_maxevals120/erpmin_latin.pdf}};
 \end{tikzpicture}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Diseño 1 (100 semillas)}
-
-\begin{tikzpicture}[remember picture, overlay]
- \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=24}, \texttt{maxeval=24}, \texttt{total=48}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer24_maxevals24/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer24_maxevals24/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space2/initer24_maxevals24/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer24_maxevals24/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer24_maxevals24/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space2/initer24_maxevals24/minspace_latin.eps}};
-\end{tikzpicture}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Diseño 2 (100 semillas)}
-
-\begin{tikzpicture}[remember picture, overlay]
- \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=36}, \texttt{maxeval=36}, \texttt{total=72}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
- \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer36_maxevals36/Jmin_random.eps}};
- \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer36_maxevals36/imin_random.eps}};
- \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space2/initer36_maxevals36/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer36_maxevals36/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer36_maxevals36/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space2/initer36_maxevals36/minspace_latin.eps}};
-\end{tikzpicture}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Diseño 3 (100 semillas)}
-
-\begin{tikzpicture}[remember picture, overlay]
- \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
- \node (descrip) at (2.5,4.15) {\texttt{initer=60}, \texttt{maxeval=120}, \texttt{total=180}};
-%%%%
- \node (Rname) at (-3.8,3.1) {Random};
-% \node (Jrandom) at (-4,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer60_maxevals120/Jmin_random.eps}};
-% \node (Irandom) at (0,1.75) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer60_maxevals120/imin_random.eps}};
-% \node (Srandom) at (4,1.75) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space2/initer60_maxevals120/minspace_random.eps}};
-%%%%
- \node (Lname) at (-3.8,-1.1) {Latin};
- \node (Jlatin) at (-4,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer60_maxevals120/Jmin_latin.eps}};
- \node (Ilatin) at (0,-2.4) {\includegraphics[trim={0 0 0 0.5cm},clip,width=0.35\textwidth]{figures/space2/initer60_maxevals120/imin_latin.eps}};
- \node (Slatin) at (4,-2.4) {\includegraphics[trim={0 0 0 0},clip,width=0.35\textwidth]{figures/space2/initer60_maxevals120/minspace_latin.eps}};
-\end{tikzpicture}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}[t]
+% \frametitle{Estudio de $A_{ki}$}
+% 
+% \begin{itemize}
+% \item Número de configuraciones en CI: \texttt{mxconf=32}
+% \item Espacio de hiper--parámetros: \texttt{nlamvar=20} 
+%   \vspace{-0.25cm}
+%   \begin{align*} 
+%     \lambda_{nl} &=[0.5,1.5] \quad:\quad n\le 6,\,l\le 4
+%   \end{align*}
+% \vspace{-0.8cm}
+% \item Diseño inicial: 
+%   \begin{itemize}
+%     \item Latin hypercube
+%     \item Número de datos iniciales: \texttt{initer}
+%   \end{itemize}
+% \item Presupuesto: \texttt{maxeval}
+% \item Función costo: \texttt{ntran=5}
+% $$J=\sum_k^{t} \frac{1}{e_t}\left|\frac{A_{ki}^{\textrm{obs.}}-A_{ki}^{\textrm{comp.}}}{A_{ki}^{\textrm{obs.}}}\right|$$
+% \end{itemize}
+% 
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}
+% \frametitle{Minimización de $t$ transiciones normalizadas:}
+% 
+% \begin{tikzpicture}[remember picture, overlay]
+%  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
+% %%%%%%%%%%%%%%%%%%%%
+%  \node<1-> at (0,3.55) {\texttt{initer=60, maxevals=24}};
+%  \node<1> at (-4,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer60_maxevals24/Jmin_latin.eps}};
+%  \node<1> at (0,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer60_maxevals24/imin_latin.eps}};
+%  \node<1> at (4,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer60_maxevals24/minspace1_latin.eps}};
+%  \node<1-> at (0,-0.6) {\texttt{initer=100, maxevals=40}};
+%  \node<1> at (-4,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/Jmin_latin.eps}};
+%  \node<1> at (0,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/imin_latin.eps}};
+%  \node<1> at (4,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/minspace1_latin.eps}};
+% %%%%%%%%%%%%%%%%%%%%
+%  \node<2> at (-3,1.4) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam20/initer60_maxevals24/akierp_latin.eps}};
+%  \node<2> at (-3,-2.7) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/akierp_latin.eps}};
+%  \node<2> at (3.75,1.6) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam20/initer60_maxevals24/erpmin_latin.pdf}};
+%  \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/erpmin_latin.pdf}};
+% \end{tikzpicture}
+% 
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}
+% \frametitle{Minimización de $t$ transiciones normalizadas:}
+% 
+% \begin{tikzpicture}[remember picture, overlay]
+%  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
+% %%%%%%%%%%%%%%%%%%%%
+%  \node<1-> at (0,3.55) {\texttt{initer=100, maxevals=40}};
+%  \node<1> at (-4,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/Jmin_latin.eps}};
+%  \node<1> at (0,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/imin_latin.eps}};
+%  \node<1> at (4,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/minspace1_latin.eps}};
+%  \node<2> at (-3,1.4) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/akierp_latin.eps}};
+%  \node<2> at (3.75,1.6) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam20/initer100_maxevals40/erpmin_latin.pdf}};
+% %%%%%%%%%%%%%%%%%%%%
+%  \node<1-> at (0,-0.6) {\texttt{initer=200, maxevals=80}};
+%  \node<1> at (-4,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/Jmin_latin.eps}};
+%  \node<1> at (0,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/imin_latin.eps}};
+%  \node<1> at (4,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/minspace1_latin.eps}};
+%  \node<2> at (-3,-2.7) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/akierp_latin.eps}};
+%  \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/erpmin_latin.pdf}};
+% \end{tikzpicture}
+% 
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}[t]
+% \frametitle{Estudio de $A_{ki}$}
+% 
+% \begin{itemize}
+% \item Número de configuraciones en CI: \texttt{mxconf=32}
+% \item Espacio de hiper--parámetros: \texttt{nlamvar=20} 
+%   \vspace{-0.25cm}
+%   \begin{align*} 
+%     \lambda_{nl} &=[0.5,1.5] \quad:\quad n\le 6,\,l\le 4
+%   \end{align*}
+% \vspace{-0.8cm}
+% \item Diseño inicial: 
+%   \begin{itemize}
+%     \item Latin hypercube
+%     \item Número de datos iniciales: \texttt{initer}
+%   \end{itemize}
+% \item Presupuesto: \texttt{maxeval}
+% \item Función costo: \texttt{ntran=5}
+% $$J=\sum_i^{n} \left|\frac{E_{n}^{\textrm{obs.}}-E_{n}^{\textrm{comp.}}}{E_{n}^{\textrm{obs.}}}\right| 
+% + \sum_k^{t} \frac{1}{e_t^{3/2}}\left|\frac{A_{ki}^{\textrm{obs.}}-A_{ki}^{\textrm{comp.}}}{A_{ki}^{\textrm{obs.}}}\right|$$
+% \end{itemize}
+% 
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}
+% \frametitle{Minimización de $t$ transiciones normalizadas:}
+% 
+% \begin{tikzpicture}[remember picture, overlay]
+%  \tikzset{shift={(current page.center)},xshift=0cm,yshift=0cm}
+% %%%%%%%%%%%%%%%%%%%%
+%  \node<1-> at (0,3.55) {$J_{A}$, \texttt{initer=200, maxevals=80}};
+%  \node<1> at (-4,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/Jmin_latin.eps}};
+%  \node<1> at (0,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/imin_latin.eps}};
+%  \node<1> at (4,1.5) {\includegraphics[width=0.35\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/minspace1_latin.eps}};
+%  \node<2> at (-3,1.4) {\includegraphics[width=0.55\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/akierp_latin.eps}};
+%  \node<2> at (3.75,1.6) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_aki/nlam20/initer200_maxevals80/erpmin_latin.pdf}};
+% %%%%%%%%%%%%%%%%%%%%
+%  \node<1-> at (0,-0.6) {$J_{E+A}$, \texttt{initer=200, maxevals=80}};
+%  \node<1> at (-4,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_ener+aki/nlam20/initer200_maxevals80/Jmin_latin.eps}};
+%  \node<1> at (0,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_ener+aki/nlam20/initer200_maxevals80/imin_latin.eps}};
+%  \node<1> at (4,-2.6) {\includegraphics[width=0.35\textwidth]{figures/mod_ener+aki/nlam20/initer200_maxevals80/minspace1_latin.eps}};
+%  \node<2> at (-3,-2.7) {\includegraphics[width=0.55\textwidth]{figures/mod_ener+aki/nlam20/initer200_maxevals80/akierp_latin.eps}};
+%  \node<2> at (3.75,-2.4) {\includegraphics[trim={1cm 19cm 6cm 2cm},clip,width=0.55\textwidth]{figures/mod_ener+aki/nlam20/initer200_maxevals80/erpmin_latin.pdf}};
+% \end{tikzpicture}
+% 
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\begin{frame}
 %\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -43,7 +43,7 @@ maxlam: 2.5
 minlam: 0.01
 mfunc: "Er"
 minst: "gr+ex"
-nener: 3
+nener: 10 
 wi: "eq"
 vpol: True
 iseed: 5745511

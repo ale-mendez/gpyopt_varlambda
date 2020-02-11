@@ -16,6 +16,7 @@ do
    python ./varpol_gpyopt.py 
    mv Be* $fseed/.
 done
-rm adas* adf* oic ols olg OMG* TERMS LEVELS CONFIG*
 fin=$(date)
 echo $fin >> info_run.out
+./xtractdata.sh
+rm autovarlambda* das* NIST_* varpol_gpyopt.py xtractdata.sh
