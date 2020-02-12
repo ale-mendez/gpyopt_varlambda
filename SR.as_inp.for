@@ -254,7 +254,7 @@ c...later      open(unit=42,file='oic',status='unknown')
 !***********************************************************************
       implicit none
       integer MXL,MXLT
-      parameter(MXL=200,MXLT=3500)
+      parameter(MXL=400,MXLT=3500)
 
       character line*80,dum*2,dum2*7,alev*6,aegr*15
       integer i,j,ss,jj,itr

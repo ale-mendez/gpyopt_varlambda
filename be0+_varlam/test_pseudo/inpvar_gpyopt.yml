@@ -42,9 +42,9 @@
 #                         ="inp" : read input values (below)
 #           weight   -- weight in relative errors (number of elements == nener)
 #
-cfgs: 32
-initer: 3
-maxevals: 1
+cfgs: 22
+initer: 5
+maxevals: 5
 modpot: False
 polpot: False
 pseudo: True
@@ -84,7 +84,7 @@ nener: 2
 ntran: 1
 
 initmap: "latin"
-iseed: 523441
+iseed: 1234
 gridtype: "continuous"
 mtype: "GP"
 aftype: "EI"
