@@ -43,13 +43,13 @@
 #           weight   -- weight in relative errors (number of elements == nener)
 #
 cfgs: 32
-initer: 5
-maxevals: 5
+initer: 3
+maxevals: 1
 modpot: False
 polpot: False
 pseudo: True
 nlamvar: 9
-orbs:
+orbs: 
   - 7  # 4s
   - 8  # 4p
   - 9  # 4d
@@ -59,7 +59,7 @@ orbs:
   - 13  # 5d
   - 14  # 5f
   - 15  # 5g
-maxlam:
+maxlam: 
   - 1.2
   - 1.2
   - 1.2
@@ -69,7 +69,7 @@ maxlam:
   - 1.2
   - 1.2
   - 1.2
-minlam:
+minlam: 
   - 0.8
   - 0.8
   - 0.8
