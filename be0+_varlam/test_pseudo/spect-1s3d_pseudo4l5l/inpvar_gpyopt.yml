@@ -44,7 +44,7 @@
 #
 cfgs: 15
 initer: 5
-maxevals: 5
+maxevals: 4
 modpot: False
 polpot: False
 pseudo: True
@@ -70,15 +70,15 @@ maxlam:
   - 1.2
   - 1.2
 minlam: 
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
+  - 0.8
 cost: "aki"
 nener: 2
 ntran: 1

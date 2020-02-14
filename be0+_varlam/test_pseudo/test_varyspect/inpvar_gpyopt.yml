@@ -43,44 +43,47 @@
 #           weight   -- weight in relative errors (number of elements == nener)
 #
 cfgs: 15
-initer: 5
-maxevals: 5
-modpot: False
+initer: 20
+maxevals: 50
+modpot: True
 polpot: False
-pseudo: True
-nlamvar: 9
+pseudo: False
+nlamvar: 10
 orbs: 
-  - 7  # 4s
-  - 8  # 4p
-  - 9  # 4d
-  - 10  # 4f
-  - 11  # 5s
-  - 12  # 5p
-  - 13  # 5d
-  - 14  # 5f
-  - 15  # 5g
+  - 1  #1s
+  - 2  #2s
+  - 3  #2p
+  - 4  #3s
+  - 5  #3p
+  - 6  #3d
+  - 7  #4s
+  - 8  #4p
+  - 9  #4d
+  - 10 #4f
 maxlam: 
-  - 1.2
-  - 1.2
-  - 1.2
-  - 1.2
-  - 1.2
-  - 1.2
-  - 1.2
-  - 1.2
-  - 1.2
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
 minlam: 
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-  - 1.1
-cost: "aki"
-nener: 2
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+cost: "ener"
+nener: 18
 ntran: 1
 
 initmap: "latin"

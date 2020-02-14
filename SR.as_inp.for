@@ -114,7 +114,7 @@
         endif
 200   continue
 201   close(unit=20)
-      
+c      print*,'pseudos starting at',ips
       return
       end
 

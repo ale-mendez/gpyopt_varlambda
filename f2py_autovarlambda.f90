@@ -99,20 +99,22 @@ cf2py integer, intent(in) :: nvarpol
          lam(i) = 1.0
 100   continue
 
-!     write varying lambda values
+!     copy lambda values from das_*CFG file to lam
+      do i=1,ntlam
+         lam(i) = linp(i)
+!         print*,i,lam(i)
+      enddo
+!     modify varying lambda values
       nvlam = NVMX
       do 200 i=1,nvlam
          idx = idxlam(i)
          if (idx.ne.0) lam(idx) = lam0(i)
-!         print*,ips,i,lam0(i)
-         if(ips.gt.0.and.i.ge.ips) lam(i) = -1.0*lam0(i)
-!         print*,lam(i)                   !test
 200   continue
-!      do i=nvlam+1,ntlam
-!         lam(i) = linp(i)
-!!         print*,i,lam(i)
-!      enddo
-!      print*,(lam(i),i=1,ntlam)
+!     write pseudo orbitals if required
+      do i=1,ntlam
+         if(ips.gt.0.and.i.ge.ips) lam(i) = -1.0*lam(i)
+      enddo
+c      print*,(lam(i),i=1,ntlam)
 
       return
       end
@@ -266,6 +268,7 @@ cf2py integer, intent(in) :: nvarpol
       fend="'&END')"
       fformat0=fformat(1:ib)//fend
       aorthog="'YES'"
+      if (ips.ne.0) aorthog="'LPS'"
       aform="'FORM'"
       aradout="'NO'"
       if(ipol.eq.0) then
