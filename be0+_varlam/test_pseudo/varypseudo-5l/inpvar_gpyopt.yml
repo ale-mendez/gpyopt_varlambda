@@ -43,8 +43,8 @@
 #           weight   -- weight in relative errors (number of elements == nener)
 #
 cfgs: 15
-initer: 5
-maxevals: 0
+initer: 20
+maxevals: 10
 modpot: False
 polpot: False
 pseudo: True
@@ -56,17 +56,17 @@ orbs:
   - 14  # 5f
   - 15  # 5g
 maxlam: 
-  - 0.8
-  - 0.8
-  - 0.8
-  - 0.8
-  - 0.8
+  - 1.4
+  - 1.4
+  - 1.4
+  - 1.4
+  - 1.4
 minlam: 
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
+  - 0.6
+  - 0.6
+  - 0.6
+  - 0.6
+  - 0.6
 cost: "aki"
 nener: 2
 ntran: 1

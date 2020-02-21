@@ -42,8 +42,8 @@
 #                         ="inp" : read input values (below)
 #           weight   -- weight in relative errors (number of elements == nener)
 #
-cfgs: 17
-initer: 100
+cfgs: 15
+initer: 20
 maxevals: 50
 modpot: True
 polpot: False
@@ -61,29 +61,29 @@ orbs:
   - 9  #4d
   - 10 #4f
 maxlam: 
-  - 1.5
-  - 1.5
-  - 1.5
-  - 1.5
-  - 1.5
-  - 1.5
-  - 1.5
-  - 1.5
-  - 1.5
-  - 1.5
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
+  - 2.0
 minlam: 
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
-  - 0.5
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
+  - 0.9
 cost: "ener"
-nener: 20
+nener: 18
 ntran: 1
 
 initmap: "latin"
